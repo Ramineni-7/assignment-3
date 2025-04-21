@@ -77,13 +77,28 @@ window.addEventListener("load", function() {
 
 function updateUI(cookie) {
     const token = parseCookieToken(cookie);
-
-    if (token.length > 0) {
-        document.getElementById("login-box").hidden = true;
-        document.getElementById("sign-out").hidden = false;
+    const isLoggedIn = token.length > 0;
+    
+    document.getElementById("login-box").hidden = isLoggedIn;
+    document.getElementById("sign-out").hidden = !isLoggedIn;
+    
+    
+    const mainContent = document.getElementById("content");
+    if (mainContent) {
+        mainContent.classList.toggle("d-none", !isLoggedIn);
+    }
+    
+    
+    if (!isLoggedIn) {
+        const navItems = document.querySelectorAll('.navbar-nav .nav-item');
+        navItems.forEach(item => {
+            item.style.display = 'none';
+        });
     } else {
-        document.getElementById("login-box").hidden = false;
-        document.getElementById("sign-out").hidden = true;
+        const navItems = document.querySelectorAll('.navbar-nav .nav-item');
+        navItems.forEach(item => {
+            item.style.display = '';
+        });
     }
 }
 

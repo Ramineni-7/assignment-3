@@ -18,8 +18,11 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 
-@app.get("/", response_class=JSONResponse)
+@app.get("/", response_class=HTMLResponse)
 def root(request:Request):
-    return {"hello":"assignment - 3"}
+    return templates.TemplateResponse(
+        "main.html",
+        {"request":request}
+    )
 
 
