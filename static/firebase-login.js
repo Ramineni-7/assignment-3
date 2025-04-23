@@ -4,13 +4,13 @@ import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, si
 
 
 const firebaseConfig = {
-    apiKey: "AIzaSyAe1sOhlR9D0ramO_TFef5LaPzVGL4WxXI",
-    authDomain: "ass2-39986.firebaseapp.com",
-    projectId: "ass2-39986",
-    storageBucket: "ass2-39986.firebasestorage.app",
-    messagingSenderId: "1026097036332",
-    appId: "1:1026097036332:web:2e43c666ce2c1777bc6589",
-  };
+    apiKey: "AIzaSyBMoMIJMqCIJZDgxEDpUShZCS2o1Ew_nxs",
+    authDomain: "assignment---1-1e153.firebaseapp.com",
+    projectId: "assignment---1-1e153",
+    storageBucket: "assignment---1-1e153.appspot.com",
+    messagingSenderId: "133737118405",
+    appId: "1:133737118405:web:244db60467492f4f10ceac"
+};
 window.addEventListener("load", function() {
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);

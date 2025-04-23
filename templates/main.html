@@ -1,28 +1,11 @@
 {% extends "home.html" %}
 
 {% block content %}
-{% if suggested_users %}
-<div class="card mb-4">
-    <div class="card-body py-3">
-        <div class="d-flex overflow-auto py-2">
-            {% for user in suggested_users[:10] %}
-            <div class="d-flex flex-column align-items-center">
-                <div class="story-circle">
-                    <img src="{{ user.profile_pic_url or '/static/images/default-profile.png' }}" alt="{{ user.username }}">
-                </div>
-                <div class="story-username">{{ user.username }}</div>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-</div>
-{% endif %}
-
 <div class="row">
     <div class="col-lg-8">
         {% if posts %}
             {% for post in posts %}
-            <div class="card mb-4 post-card">
+            <div class="card mb-4 post-card" data-post-id="{{ post.id }}">
                 <div class="card-header">
                     <div class="d-flex align-items-center">
                         <img src="{{ post.user_profile_pic or '/static/images/default-profile.png' }}" alt="{{ post.username }}" class="profile-pic me-3">
@@ -115,13 +98,13 @@
                     </div>
                     <div class="col">
                         <a href="/followers" class="text-decoration-none text-dark">
-                            <h6>{{ followers_count }}</h6>
+                            <h6>{{ user.Followers | length }}</h6>
                             <div class="text-muted small">Followers</div>
                         </a>
                     </div>
                     <div class="col">
                         <a href="/following" class="text-decoration-none text-dark">
-                            <h6>{{ following_count }}</h6>
+                            <h6>{{ user.Following | length }}</h6>
                             <div class="text-muted small">Following</div>
                         </a>
                     </div>
@@ -129,7 +112,6 @@
                 <a href="/create_post" class="btn btn-primary w-100">Create Post</a>
             </div>
         </div>
-        
         <div class="card">
             <div class="card-header">
                 <div class="d-flex justify-content-between align-items-center">
@@ -139,21 +121,22 @@
             </div>
             <div class="card-body p-0">
                 {% if suggested_users %}
-                <script>
-                    console.log("hello suppy");
-                </script>
-                    <ul class="list-group list-group-flush">
+                    <ul class="list-group list-group-flush" id="suggested-users-list">
                     {% for user in suggested_users[:5] %}
                         <li class="list-group-item">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div class="d-flex align-items-center">
                                     <img src="{{ user.profile_pic_url or '/static/images/default-profile.png' }}" class="profile-pic me-2" alt="Profile picture">
                                     <div>
-                                        <a href="/profile/{{ user.username }}" class="text-decoration-none text-dark fw-bold">{{ user.username }}</a>
+                                        <a href="/profile/{{ user.Username }}" class="text-decoration-none text-dark fw-bold">{{ user.Username }}</a>
                                         <div class="text-muted small">{{ 'Popular' if loop.index == 1 else 'Suggested for you' }}</div>
                                     </div>
                                 </div>
-                                <button class="btn btn-sm btn-outline-primary rounded-pill follow-button" data-username="{{ user.username }}">Follow</button>
+                                <button class="btn btn-sm btn-outline-primary rounded-pill follow-button" 
+                                        data-username="{{ user.username }}"
+                                        onclick="followUser(this, '{{ user.Username }}')">
+                                    Follow
+                                </button>
                             </div>
                         </li>
                     {% endfor %}
@@ -201,7 +184,7 @@
         
         if (!commentText) return;
         
-        fetch(`/api/posts/${postId}/comments`, {
+        fetch(`/posts/${postId}/comments`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -229,6 +212,73 @@
         });
     }
     
+    function followUser(button, username) {
+        const isFollowing = button.textContent.trim() === 'Following';
+        
+        button.disabled = true;
+        
+        if (!isFollowing) {
+            button.textContent = 'Following';
+            button.classList.remove('btn-outline-primary');
+            button.classList.add('btn-outline-secondary');
+        } else {
+            button.textContent = 'Follow';
+            button.classList.remove('btn-outline-secondary');
+            button.classList.add('btn-outline-primary');
+        }
+        
+        fetch(`/follow/${username}`, {
+            method: isFollowing ? 'DELETE' : 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+               alert(data.message);
+                
+                const followerCountEl = document.querySelector('a[href="/followers"] h6');
+                if (followerCountEl) {
+                    let count = parseInt(followerCountEl.textContent);
+                    if (!isFollowing) {
+                        followerCountEl.textContent = count + 1;
+                    } else {
+                        followerCountEl.textContent = Math.max(0, count - 1);
+                    }
+                }
+            } else {
+                console.error('Error:', data.message);
+                revertButtonState(button, isFollowing);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            revertButtonState(button, isFollowing);
+            alert('Failed to update follow status. Please try again.');
+        })
+        .finally(() => {
+            button.disabled = false;
+        });
+    }
+    
+    function revertButtonState(button, wasFollowing) {
+        if (wasFollowing) {
+            button.textContent = 'Following';
+            button.classList.remove('btn-outline-primary');
+            button.classList.add('btn-outline-secondary');
+        } else {
+            button.textContent = 'Follow';
+            button.classList.remove('btn-outline-secondary');
+            button.classList.add('btn-outline-primary');
+        }
+    }
+    
     document.querySelectorAll('.action-icons .bi-heart').forEach(icon => {
         icon.addEventListener('click', function() {
             this.classList.toggle('bi-heart');
@@ -251,25 +301,10 @@
         });
     });
     
-    document.querySelectorAll('.follow-button').forEach(button => {
+    document.querySelectorAll('.follow-button:not([onclick])').forEach(button => {
+        const username = button.getAttribute('data-username');
         button.addEventListener('click', function() {
-            const username = this.getAttribute('data-username');
-            const isFollowing = this.textContent.trim() === 'Following';
-            
-            fetch(`/api/follow/${username}`, {
-                method: isFollowing ? 'DELETE' : 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    this.textContent = isFollowing ? 'Follow' : 'Following';
-                    this.classList.toggle('btn-outline-primary');
-                    this.classList.toggle('btn-outline-secondary');
-                }
-            });
+            followUser(this, username);
         });
     });
 </script>
