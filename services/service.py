@@ -1,22 +1,102 @@
+import datetime
 from typing import Any, Dict, List, Optional
-from uuid import UUID
+from uuid import UUID, uuid4
 import uuid
 from google.auth.transport import requests
-from google.cloud import firestore
 import google.oauth2.id_token
-from fastapi import Request
+from fastapi import Request, Response, UploadFile
 from fastapi import HTTPException
-from datetime import date, datetime, time
-
 from pydantic import Json
-
-from models.models import Comment, Post, User
+from models.models import Comment, Post, PostInput, PostOutput, User
+from google.cloud import firestore,storage
+import local_constants
+import starlette.status as status
 
 firestore_db = firestore.Client()
 
 firebase_request_adapter = requests.Request()
 
 class Service:
+
+    @staticmethod
+    def download_file(filename:str):
+        try:
+            return Response(Service.downloadBlob(filename))
+        except Exception as e:
+            print("in service")
+            print(e)
+            raise Exception(str(e))
+
+    @staticmethod
+    def create_post(user:User,post_input_data:PostInput)->Post:
+        try:
+            if len(post_input_data.caption) > 500:
+                raise Exception("no more than 500 characters please")
+            post = Post(
+                Id=str(uuid.uuid4()), 
+                UserId=str(user.Id),  
+                Username=user.Username,
+                Caption=post_input_data.caption,
+                Date=datetime.datetime.utcnow().isoformat(),
+                Likes=0,
+                Image_ref=post_input_data.image_ref
+            )
+            post.Id = str(post.Id)
+            post.UserId = str(post.UserId)
+            print(type(post.Id))
+            firestore_db.collection("Post").add(post.dict())
+            return post
+        except Exception as e:
+            print("in service")
+            print(e)
+            raise Exception(str(e))
+
+    @staticmethod
+    async def upload_file(request: Request,file_name:UploadFile):
+        # if file_name.filename.filename == "":
+        #     raise Exception("file name is empty")
+        await Service.addFile(file_name)
+        
+
+    @staticmethod
+    def downloadBlob(filename):
+        try:
+            storage_client = storage.Client(project=local_constants.PROJECT_NAME)
+            bucket = storage_client.bucket(local_constants.PROJECT_STORAGE_BUCKET)
+            blob = bucket.get_blob(filename)
+            return blob.download_as_bytes()
+        except Exception as e:
+            print("downalod blob ")
+            print(e)
+            raise Exception(e)
+
+    @staticmethod
+    async def blobList(prefix):
+        try:
+            storage_client = storage.Client(project=local_constants.PROJECT_NAME)
+            return storage_client.list_blobs(local_constants.PROJECT_STORAGE_BUCKET, prefix=prefix)
+        except Exception as e:
+            print(e)
+            raise Exception(e)
+
+    @staticmethod
+    async def addFile(file)->None:
+        try:
+            storage_client = storage.Client(project=local_constants.PROJECT_NAME)
+            bucket = storage_client.bucket(local_constants.PROJECT_STORAGE_BUCKET)
+            print(file)
+            blob = storage.Blob(file.filename, bucket)
+            blob.upload_from_file(file.file)
+        except Exception as e:
+            print(e)
+            raise Exception(e)
+
+    @staticmethod
+    async def addDirectory(directory_name)->None:
+        storage_client = storage.Client(project=local_constants.PROJECT_NAME)
+        bucket = storage_client.bucket(local_constants.PROJECT_STORAGE_BUCKET)
+        blob = bucket.blob(directory_name)
+        blob.upload_from_string('', content_type='application/x-www-form-urlencoded; charset=UTF-8')
 
     @staticmethod
     def unfollow_user(user:User,unfollow_user_username:str)->Json:
@@ -86,7 +166,8 @@ class Service:
                 "suggested_users":suggested_users
             }
         except Exception as e:
-            pass
+            print(e)
+            raise Exception(e)
 
     @staticmethod
     def check_login_and_return_user(request:Request)->Dict:
@@ -127,11 +208,15 @@ class Service:
             .order_by("Date", direction=firestore.Query.DESCENDING) \
             .limit(50) \
             .stream()
-            posts = [Post(**doc.to_dict()) for doc in posts_query]
+            posts = [PostOutput(**doc.to_dict()) for doc in posts_query]
             for post in posts:
+                post.Id = str(post.Id)
+                post.UserId = str(post.UserId)
+                if isinstance(post.Date, datetime.datetime):
+                    post.Date = post.Date.isoformat()
                 comment_doc = firestore_db.collection('Comment').where('PostId','==',post.Id).stream()
                 comments = [Comment(**doc.to_dict()) for doc in comment_doc]
-                post.comments = comments
+                post.Comments = comments
             
             return posts
         except Exception as e:

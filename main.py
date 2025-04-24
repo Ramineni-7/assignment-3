@@ -1,14 +1,18 @@
+import datetime
 from typing import Dict, Optional
-from fastapi import FastAPI, HTTPException, Request,Form, Depends
+from fastapi import FastAPI, File, HTTPException, Request,Form, Depends, Response, UploadFile
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from google.auth.transport import requests
-from google.cloud import firestore
+from google.cloud import firestore,storage
 import google.oauth2.id_token
 from fastapi.responses import RedirectResponse
-from models.models import Post
+from models.models import  Post, PostInput
 from services.service import Service
+import local_constants
+import starlette.status as status
+
 
 app = FastAPI()
 
@@ -48,7 +52,7 @@ def root(request:Request):
         print(str(e))
         return templates.TemplateResponse(
             "main.html",
-            {"request":request}
+            {"request":request,"user":user}
         )
 
 @app.post("/follow/{follow_user_username}",response_class=JSONResponse)
@@ -81,4 +85,89 @@ def unfollow_user(request:Request,unfollow_user_username:str):
         return { "success": False, "message": str(e) }
     
 
+@app.get("/post", response_class=HTMLResponse)
+def create_post(request:Request):
+    try:
+        user = check_login_and_return_user(request)
+        if user is None:
+            return templates.TemplateResponse(
+            "main.html",
+            {"request":request,"user":None}
+        )
+        return templates.TemplateResponse(
+            "create-post.html",
+            {"request":request}
+        )
+    except Exception as e:
+        print(str(e))
+        return templates.TemplateResponse(
+            "main.html",
+            {"request":request}
+        )
     
+@app.post('/post',response_class=JSONResponse)
+def create_post(request:Request,post_input:PostInput):
+    try:
+        print(post_input)
+        user = check_login_and_return_user(request)
+        if user is None:
+            return templates.TemplateResponse(
+            "main.html",
+            {"request":request,"user":None}
+        )
+        post = Service.create_post(user,post_input)
+        post_dict = post.dict()
+        if isinstance(post_dict['Date'], datetime.datetime):
+            post_dict['Date'] = post_dict['Date'].isoformat()
+        return JSONResponse(content={"status": True, "post": post_dict}) 
+    except Exception as e:
+        print(e)
+        return JSONResponse(content={"status": False})
+
+
+@app.post('/upload-file',response_class=JSONResponse)
+async def upload_file(request:Request,file_name: UploadFile = File(...)):
+    try:
+        print(file_name)
+        user = check_login_and_return_user(request)
+        if user is None:
+            return templates.TemplateResponse(
+            "main.html",
+            {"request":request}
+        )
+        await Service.upload_file(request,file_name)
+        return JSONResponse(content={"status": True, "filename": file_name.filename}) 
+    except Exception as e:
+        print(e)
+        return JSONResponse(status_code=500,content="uploaded failed")
+    
+@app.get("/profile",response_class=HTMLResponse)
+def profile(request:Request):
+    try:
+        user = check_login_and_return_user(request)
+        if user is None:
+            return templates.TemplateResponse(
+            "main.html",
+            {"request":request,"user":None}
+        )
+        posts = Service.get_posts(user)
+        return templates.TemplateResponse(
+            "profile.html",
+            {"request":request,"posts":posts,"is_own_profile":True,"user":user}
+        )
+    except Exception as e:
+        print(e)
+
+
+@app.get("/images/{file_name}",response_class=Response)
+def download_file(request:Request,file_name:str):
+    try:
+        print(file_name)
+        if file_name.startswith("file_name="):
+            actual_filename = file_name[10:]
+            print(f"Parsed actual filename: {actual_filename}")
+            return Service.download_file(actual_filename)
+        return Service.download_file(file_name)
+    except Exception as e:
+        print(e)
+        return 

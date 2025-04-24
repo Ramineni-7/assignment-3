@@ -2,7 +2,7 @@ from typing import List, Optional
 
 from datetime import date, time, datetime
 from uuid import UUID
-from fastapi import Form
+from fastapi import File, Form
 from pydantic import BaseModel, Field
 
 
@@ -13,6 +13,8 @@ class Post(BaseModel):
     Caption:str
     Date:Optional[datetime] = None
     Likes:int
+    Image_ref:str
+
 
 
 class User(BaseModel):
@@ -37,3 +39,19 @@ class PostSchemaOut(BaseModel):
     Date:Optional[datetime] = None
     Likes:int
     Comments:List[Comment] = []
+
+class PostInput(BaseModel):
+    image_ref:str
+    caption:str
+    location:str
+
+
+class PostOutput(BaseModel):
+    Id:UUID
+    UserId:UUID
+    Username:str
+    Caption:str
+    Date:Optional[datetime] = None
+    Likes:int
+    Image_ref:str
+    Comments: List[Comment] = None
