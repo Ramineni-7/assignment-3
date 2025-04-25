@@ -17,13 +17,20 @@ class Post(BaseModel):
 
 
 
+
 class User(BaseModel):
     Id:UUID
     Username:str
     Email:str
     Followers: List[str] = []
     Following: List[str] = []
+    Bio:Optional[str] = None
+    Profile_Pic_Url: Optional[str] = None
 
+class UserProfileUpdate(BaseModel):
+    username: str
+    bio: Optional[str] = None
+    profile_pic_url: Optional[str] = None
 
 class Comment(BaseModel):
     PostId:UUID
@@ -55,3 +62,4 @@ class PostOutput(BaseModel):
     Likes:int
     Image_ref:str
     Comments: List[Comment] = None
+    User_Pic:Optional[str] = None

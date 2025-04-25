@@ -1,6 +1,7 @@
 {% extends "home.html" %}
 
 {% block content %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <div class="row">
     <div class="col-lg-8">
         {% if posts %}
@@ -8,7 +9,7 @@
             <div class="card mb-4 post-card" data-post-id="{{ post.id }}">
                 <div class="card-header">
                     <div class="d-flex align-items-center">
-                        <img src="{{ post.user_profile_pic or '/static/images/default-profile.png' }}" alt="{{ post.username }}" class="profile-pic me-3">
+                        <img src="/images/file_name={{ post.User_Pic | urlencode }}" alt="{{ post.username }}" class="profile-pic me-3">
                         <div>
                             <a href="/profile/{{ post.Username }}" class="text-decoration-none text-dark fw-bold">{{ post.Username }}</a>
                             <div class="timestamp" data-timestamp="{{ post.Date }}">{{ post.Date }}</div>
@@ -87,9 +88,9 @@
         <div class="card mb-4">
             <div class="card-body">
                 <div class="d-flex align-items-center mb-3">
-                    <img src="{{ profile_pic_url or '/static/images/default-profile.png' }}" class="profile-pic-lg me-3" alt="Profile picture">
+                    <img src="/images/file_name={{ user.Profile_Pic_Url | urlencode }}" class="profile-pic-lg me-3" alt="Profile picture">
                     <div>
-                        <h5 class="mb-1">{{ username }}</h5>
+                        <h5 class="mb-1">{{user.Username }}</h5>
                         <div class="text-muted">{{ bio|truncate(50) if bio else 'No bio yet' }}</div>
                     </div>
                 </div>
@@ -129,14 +130,14 @@
                         <li class="list-group-item">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div class="d-flex align-items-center">
-                                    <img src="{{ user.profile_pic_url or '/static/images/default-profile.png' }}" class="profile-pic me-2" alt="Profile picture">
+                                    <img src="/images/file_name={{ user.Profile_Pic_Url | urlencode }}" class="profile-pic me-2" alt="Profile picture">
                                     <div>
                                         <a href="/profile/{{ user.Username }}" class="text-decoration-none text-dark fw-bold">{{ user.Username }}</a>
                                         <div class="text-muted small">{{ 'Popular' if loop.index == 1 else 'Suggested for you' }}</div>
                                     </div>
                                 </div>
                                 <button class="btn btn-sm btn-outline-primary rounded-pill follow-button" 
-                                        data-username="{{ user.username }}"
+                                        data-username="{{ user.Username }}"
                                         onclick="followUser(this, '{{ user.Username }}')">
                                     Follow
                                 </button>
@@ -153,6 +154,238 @@
         </div>
     </div>
 </div>
+
+
+
+<!-- New User Modal -->
+{% if new_user %}
+<div class="modal fade" id="newUserModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="newUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="newUserModalLabel">Complete Your Profile</h5>
+            </div>
+            <div class="modal-body">
+                <form id="user-profile-form" enctype="multipart/form-data">
+                    <div class="text-center mb-4">
+                        <div class="position-relative d-inline-block">
+                            <div id="profile-pic-placeholder" class="profile-pic-lg mx-auto mb-2" 
+                                 style="width: 120px; height: 120px; border-radius: 50%; background-color: #f8f9fa; 
+                                        display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                                <i class="bi bi-person" style="font-size: 3rem; color: var(--text-light);"></i>
+                            </div>
+                            <img id="profile-pic-preview" class="profile-pic-lg mx-auto mb-2 d-none" 
+                                 style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover;" alt="Profile picture">
+                            <div class="position-absolute bottom-0 end-0">
+                                <label for="profile-pic-upload" class="btn btn-sm btn-primary rounded-circle">
+                                    <i class="bi bi-camera"></i>
+                                </label>
+                                <input type="file" class="d-none" id="profile-pic-upload" name="profile_pic" accept="image/png,image/jpeg">
+                            </div>
+                        </div>
+                        <small class="text-muted d-block">Upload a profile picture (optional)</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="username" name="username" required>
+                        <div class="invalid-feedback" id="username-error"></div>
+                        <small class="form-text text-muted">This will be your public username and cannot be changed later.</small>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="bio" class="form-label">Bio</label>
+                        <textarea class="form-control" id="bio" name="bio" rows="3" placeholder="Tell us about yourself..."></textarea>
+                        <div class="form-text text-end" id="bio-counter">0/150</div>
+                    </div>
+
+                    <div class="alert alert-danger d-none" id="update-error"></div>
+
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary" id="save-profile-btn">Save Profile</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Only initialize modal if new_user is true
+    {% if new_user %}
+    // Elements
+    const profilePicUpload = document.getElementById('profile-pic-upload');
+    const profilePicPlaceholder = document.getElementById('profile-pic-placeholder');
+    const profilePicPreview = document.getElementById('profile-pic-preview');
+    const bioInput = document.getElementById('bio');
+    const bioCounter = document.getElementById('bio-counter');
+    const maxBioLength = 150;
+    const userProfileForm = document.getElementById('user-profile-form');
+    const usernameInput = document.getElementById('username');
+    const usernameError = document.getElementById('username-error');
+    const updateError = document.getElementById('update-error');
+    const saveProfileBtn = document.getElementById('save-profile-btn');
+    
+    // Show modal on page load
+    const newUserModal = new bootstrap.Modal(document.getElementById('newUserModal'));
+    document.addEventListener('DOMContentLoaded', function() {
+        newUserModal.show();
+    });
+    
+    // Profile picture upload
+    profilePicUpload.addEventListener('change', function() {
+        const file = this.files[0];
+        if (file) {
+            // Validate file type
+            const fileType = file.type;
+            if (fileType !== 'image/png' && fileType !== 'image/jpeg') {
+                alert('Please upload PNG or JPG images only.');
+                this.value = '';
+                return;
+            }
+            
+            // Show preview
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                profilePicPreview.src = e.target.result;
+                profilePicPlaceholder.classList.add('d-none');
+                profilePicPreview.classList.remove('d-none');
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+    
+    // Click on placeholder to trigger file input
+    profilePicPlaceholder.addEventListener('click', function() {
+        profilePicUpload.click();
+    });
+    
+    // Bio character counter
+    bioInput.addEventListener('input', function() {
+        const length = this.value.length;
+        bioCounter.textContent = `${length}/${maxBioLength}`;
+        
+        if (length > maxBioLength) {
+            bioCounter.classList.add('text-danger');
+        } else {
+            bioCounter.classList.remove('text-danger');
+        }
+    });
+    
+    // Form submission
+    userProfileForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        // Reset errors
+        usernameError.textContent = '';
+        usernameInput.classList.remove('is-invalid');
+        updateError.classList.add('d-none');
+        
+        // Basic validation
+        if (!usernameInput.value.trim()) {
+            usernameInput.classList.add('is-invalid');
+            usernameError.textContent = 'Username is required';
+            return;
+        }
+        
+        if (bioInput.value.length > maxBioLength) {
+            bioCounter.classList.add('text-danger');
+            return;
+        }
+        
+        // Disable button and show loading state
+        saveProfileBtn.disabled = true;
+        saveProfileBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
+        
+        try {
+            // Step 1: Upload profile picture if selected
+            let profilePicFilename = null;
+            
+            if (profilePicUpload.files.length > 0) {
+                const imageFormData = new FormData();
+                imageFormData.append('file_name', profilePicUpload.files[0]);
+                
+                const uploadResponse = await fetch('/upload-file', {
+                    method: 'POST',
+                    body: imageFormData
+                });
+                
+                const responseText = await uploadResponse.text();
+                console.log('Raw upload response:', responseText);
+                
+                let uploadJson;
+                try {
+                    uploadJson = JSON.parse(responseText);
+                } catch (e) {
+                    console.error('Error parsing JSON response:', e);
+                    throw new Error('Server returned invalid response format');
+                }
+                
+                // Determine filename from response
+                profilePicFilename = uploadJson.filename || 
+                                    (typeof uploadJson.content === 'string' ? uploadJson.content : null) ||
+                                    profilePicUpload.files[0].name;
+                                    
+                if (!uploadResponse.ok) {
+                    throw new Error(uploadJson.error || 'Failed to upload profile picture');
+                }
+            }
+            
+            // Step 2: Update user profile
+            const userData = {
+                username: usernameInput.value.trim(),
+                bio: bioInput.value.trim()
+            };
+            
+            if (profilePicFilename) {
+                userData.profile_pic_url = profilePicFilename;
+            }
+            
+            const updateResponse = await fetch('/update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(userData)
+            });
+            
+            const updateResult = await updateResponse.json();
+            
+            if (updateResponse.ok && updateResult.status === true) {
+                // Success! Redirect to home page
+                window.location.href = '/';
+            } else {
+                // Show error message
+                updateError.textContent = updateResult.message || 'Failed to update profile';
+                updateError.classList.remove('d-none');
+                
+                // Handle username taken error
+                if (updateResult.error === 'username_taken') {
+                    usernameInput.classList.add('is-invalid');
+                    usernameError.textContent = 'This username is already taken';
+                }
+                
+                // Reset button
+                saveProfileBtn.disabled = false;
+                saveProfileBtn.textContent = 'Save Profile';
+            }
+        } catch (error) {
+            console.error('Error updating profile:', error);
+            updateError.textContent = error.message || 'An unexpected error occurred';
+            updateError.classList.remove('d-none');
+            
+            // Reset button
+            saveProfileBtn.disabled = false;
+            saveProfileBtn.textContent = 'Save Profile';
+        }
+    });
+    {% endif %}
+</script>
+{% endif %}
+
+
+
+
 
 <script>
     function expandComments(postId) {

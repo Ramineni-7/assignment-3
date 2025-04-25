@@ -8,7 +8,7 @@ from google.auth.transport import requests
 from google.cloud import firestore,storage
 import google.oauth2.id_token
 from fastapi.responses import RedirectResponse
-from models.models import  Post, PostInput
+from models.models import  Post, PostInput, UserProfileUpdate
 from services.service import Service
 import local_constants
 import starlette.status as status
@@ -36,7 +36,7 @@ def check_login_and_return_user(request:Request)->Dict:
 @app.get("/", response_class=HTMLResponse)
 def root(request:Request):
     try:
-        Service.create_user_into_firestore(request)
+        new_user = Service.create_user_into_firestore(request)
         user = check_login_and_return_user(request)
         if user is None:
             return templates.TemplateResponse(
@@ -46,13 +46,13 @@ def root(request:Request):
         data = Service.get_data_for_root(user)
         return templates.TemplateResponse(
             "main.html",
-            {"request":request,"user":user,"posts":data['posts'],"suggested_users":data["suggested_users"]}
+            {"request":request,"user":user,"posts":data['posts'],"suggested_users":data["suggested_users"],"new_user":new_user}
         )
     except Exception as e:
         print(str(e))
         return templates.TemplateResponse(
             "main.html",
-            {"request":request,"user":user}
+            {"request":request,"user":None}
         )
 
 @app.post("/follow/{follow_user_username}",response_class=JSONResponse)
@@ -165,9 +165,114 @@ def download_file(request:Request,file_name:str):
         print(file_name)
         if file_name.startswith("file_name="):
             actual_filename = file_name[10:]
-            print(f"Parsed actual filename: {actual_filename}")
             return Service.download_file(actual_filename)
         return Service.download_file(file_name)
     except Exception as e:
         print(e)
         return 
+    
+    
+@app.get("/search", response_class=HTMLResponse)
+def search_page(request: Request):
+    try:
+        user = check_login_and_return_user(request)
+        if user is None:
+            return templates.TemplateResponse(
+            "main.html",
+            {"request":request,"user":None}
+        )
+        return templates.TemplateResponse("users.html", {
+        "request": request,
+        "mode": "search",
+        "users": [],
+        "current_user": user,
+        "search_placeholder": "Search for users..."
+    })
+    except Exception as e:
+        print(e)
+        return templates.TemplateResponse(
+            "main.html",
+            {"request":request,"user":None}
+        )
+    
+@app.get("/api/search")
+async def api_search(request:Request,query: str):
+   
+   try:
+        user = check_login_and_return_user(request)
+        if user is None:
+            return {"users":None}
+        users = Service.get_all_users_for_search(user,query)
+        print(users)
+        return {"users": users}
+   except Exception as e:
+       return {"users":None}
+   
+
+# Route to render the followers page
+@app.get("/followers", response_class=HTMLResponse)
+def followers_page(request: Request):
+    try:
+        user = check_login_and_return_user(request)
+        if user is None:
+                return templates.TemplateResponse(
+                "main.html",
+                {"request":request,"user":None}
+            )
+        
+        followers = Service.get_all_user_followers(user)
+
+        return templates.TemplateResponse("users.html", {
+            "request": request,
+            "mode": "followers",
+            "users": followers,
+            "profile_username": user.Username,
+            "current_user": user,
+            "search_placeholder": f"Search {user.Username}'s followers..."
+        })
+    except Exception as e:
+        return templates.TemplateResponse(
+                "main.html",
+                {"request":request,"user":None}
+        )
+
+@app.get("/following",response_class=HTMLResponse)
+def get_all_user_following(request:Request):
+    try:
+        user = check_login_and_return_user(request)
+        if user is None:
+                return templates.TemplateResponse(
+                "main.html",
+                {"request":request,"user":None}
+            )
+        
+        following = Service.get_all_user_following(user)
+
+        return templates.TemplateResponse("users.html", {
+            "request": request,
+            "mode": "following",
+            "users": following,
+            "profile_username": user.Username,
+            "current_user": user,
+            "search_placeholder": f"Search {user.Username}'s following..."
+        })
+    except Exception as e:
+        return templates.TemplateResponse(
+                "main.html",
+                {"request":request,"user":None}
+        )
+
+@app.post("/update",response_class=JSONResponse)
+def update_user_profile(request:Request,profile_data:UserProfileUpdate):
+    try:
+        user = check_login_and_return_user(request)
+        if user is None:
+            return templates.TemplateResponse(
+                "main.html",
+                {"request":request,"user":None}
+            )
+        Service.update_user(user,profile_data)
+        return {"status": True, "message": "Profile updated successfully"}
+    except Exception as e:
+        print(f"Error updating user profile: {str(e)}")
+        return {"status": False, "message": f"Failed to update profile: {str(e)}"}

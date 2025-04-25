@@ -1,0 +1,459 @@
+{% extends "home.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card">
+            <!-- Page Header Based on Mode -->
+            <div class="card-header bg-white p-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    {% if mode == 'search' %}
+                        <h4 class="mb-0">Search Users</h4>
+                    {% elif mode == 'followers' %}
+                        <div class="d-flex align-items-center">
+                            <a href="/profile/{{ profile_username }}" class="btn btn-sm btn-outline-secondary me-3">
+                                <i class="bi bi-arrow-left"></i>
+                            </a>
+                            <h4 class="mb-0">Followers</h4>
+                        </div>
+                    {% elif mode == 'following' %}
+                        <div class="d-flex align-items-center">
+                            <a href="/profile/{{ profile_username }}" class="btn btn-sm btn-outline-secondary me-3">
+                                <i class="bi bi-arrow-left"></i>
+                            </a>
+                            <h4 class="mb-0">{{ profile_username }} is Following</h4>
+                        </div>
+                    {% endif %}
+                    
+                    <!-- Mode Tabs -->
+                    {% if mode == 'followers' or mode == 'following' %}
+                        <div class="nav nav-pills">
+                            <a href="/followers/" class="nav-link {% if mode == 'followers' %}active{% endif %}">
+                                Followers
+                            </a>
+                            <a href="/following/" class="nav-link {% if mode == 'following' %}active{% endif %}">
+                                Following
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Search Bar -->
+            <div class="p-3 border-bottom">
+                <div class="input-group">
+                    <span class="input-group-text bg-light border-end-0">
+                        <i class="bi bi-search"></i>
+                    </span>
+                    <input type="text" id="search-input" class="form-control bg-light border-start-0" 
+                           placeholder="{{ search_placeholder }}" 
+                           {% if mode == 'search' %}autofocus{% endif %}>
+                    {% if mode == 'search' %}
+                        <button id="search-button" class="btn btn-primary">Search</button>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="card-body p-0">
+                <!-- Loading Indicator -->
+                <div id="loading-indicator" class="text-center py-4 d-none">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2">Loading...</p>
+                </div>
+                
+                <!-- Users List -->
+                <div id="users-list-container">
+                    {% if users %}
+                        <ul class="list-group list-group-flush" id="users-list">
+                            {% for user in users %}
+                            <li class="list-group-item user-item">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div class="d-flex align-items-center">
+                                        <img src="{{ user.profile_pic_url or '/static/images/default-profile.png' }}" 
+                                             class="profile-pic me-3" alt="{{ user.username }}">
+                                        <div>
+                                            <a href="/profile/{{ user.username }}" class="text-decoration-none">
+                                                <h6 class="mb-0 username-text">{{ user.Username }}</h6>
+                                            </a>
+                                            <small class="text-muted profile-name-text">{{ user.Bio or '' }}</small>
+                                            {% if user.mutual_count and user.mutual_count > 0 %}
+                                            <div class="small text-muted">
+                                                <i class="bi bi-people-fill"></i> {{ user.mutual_count }} mutual followers
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {% if current_user.Username != user.Username %}
+                                    <button class="btn btn-sm {{ 'btn-outline-secondary' if user.is_following else 'btn-primary' }} rounded-pill follow-button" 
+                                    data-username="{{ user.Username }}">
+                                {{ 'Following' if user.is_following else 'Follow' }}
+                            </button>
+                                    {% endif %}
+                                </div>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        
+
+                    {% else %}
+                        <div class="text-center py-5" id="empty-state">
+                            <div style="font-size: 3rem; color: var(--text-light);">
+                                {% if mode == 'search' %}
+                                    <i class="bi bi-search"></i>
+                                {% else %}
+                                    <i class="bi bi-people"></i>
+                                {% endif %}
+                            </div>
+                            <h5 class="mt-3">
+                                {% if mode == 'search' %}
+                                    Search for users
+                                {% elif mode == 'followers' %}
+                                    No followers yet
+                                {% elif mode == 'following' %}
+                                    Not following anyone yet
+                                {% endif %}
+                            </h5>
+                            <p class="text-muted">
+                                {% if mode == 'search' %}
+                                    Find people to follow and connect with
+                                {% elif mode == 'followers' %}
+                                    When people follow {{ profile_username }}, they'll appear here.
+                                {% elif mode == 'following' %}
+                                    When {{ profile_username }} follows people, they'll appear here.
+                                {% endif %}
+                            </p>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- No Results State (initially hidden) -->
+                <div id="no-results" class="text-center py-5 d-none">
+                    <div style="font-size: 3rem; color: var(--text-light);">
+                        <i class="bi bi-emoji-frown"></i>
+                    </div>
+                    <h5 class="mt-3">No Results Found</h5>
+                    <p class="text-muted">Try searching with different keywords</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .profile-pic {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 2px solid var(--primary-color);
+    }
+    
+    .nav-pills .nav-link {
+        color: var(--text-dark);
+        border-radius: 20px;
+        padding: 0.25rem 1rem;
+    }
+    
+    .nav-pills .nav-link.active {
+        background-color: var(--primary-color);
+        color: white;
+    }
+    
+    .list-group-item {
+        padding: 0.75rem 1rem;
+        transition: background-color 0.2s ease;
+    }
+    
+    .list-group-item:hover {
+        background-color: rgba(0, 0, 0, 0.02);
+    }
+    
+    #search-input {
+        border-radius: 0 20px 20px 0;
+    }
+    
+    .input-group-text {
+        border-radius: 20px 0 0 20px;
+    }
+    
+    /* Skeleton loading animation */
+    @keyframes shimmer {
+        0% {
+            background-position: -1000px 0;
+        }
+        100% {
+            background-position: 1000px 0;
+        }
+    }
+    
+    .skeleton {
+        background: linear-gradient(to right, #f6f7f8 8%, #edeef1 18%, #f6f7f8 33%);
+        background-size: 1000px 100%;
+        animation: shimmer 2s infinite linear;
+    }
+    
+    .skeleton-item .profile-pic {
+        background: #eee;
+        border: none;
+    }
+</style>
+
+<script>
+    // Elements
+    const searchInput = document.getElementById('search-input');
+    const searchButton = document.getElementById('search-button');
+    const usersList = document.getElementById('users-list');
+    const usersListContainer = document.getElementById('users-list-container');
+    const loadMoreBtn = document.getElementById('load-more-btn');
+    const loadingIndicator = document.getElementById('loading-indicator');
+    const emptyState = document.getElementById('empty-state');
+    const noResults = document.getElementById('no-results');
+    
+    // Variables
+    const mode = '{{ mode }}';
+    const profileUsername = '{{ profile_username }}';
+    let isSearching = false;
+    let currentPage = 1;
+    
+    // Initialize search functionality
+    if (searchInput) {
+        // Filter the list on input for followers/following mode
+        if (mode === 'followers' || mode === 'following') {
+            searchInput.addEventListener('input', function() {
+                const searchValue = this.value.toLowerCase();
+                
+                document.querySelectorAll('.user-item').forEach(item => {
+                    const usernameText = item.querySelector('.username-text').textContent.toLowerCase();
+                    const profileNameText = item.querySelector('.profile-name-text').textContent.toLowerCase();
+                    
+                    if (usernameText.includes(searchValue) || profileNameText.includes(searchValue)) {
+                        item.style.display = '';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+                
+                // Check if no users are visible after filtering
+                const visibleUsers = Array.from(document.querySelectorAll('.user-item')).filter(
+                    item => item.style.display !== 'none'
+                );
+                
+                if (visibleUsers.length === 0 && searchValue !== '') {
+                    noResults.classList.remove('d-none');
+                } else {
+                    noResults.classList.add('d-none');
+                }
+            });
+        }
+        
+        // Perform search on Enter key in search mode
+        if (mode === 'search') {
+            searchInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    performSearch();
+                }
+            });
+            
+            // Search button click handler
+            if (searchButton) {
+                searchButton.addEventListener('click', performSearch);
+            }
+        }
+    }
+    
+    // Perform search (search mode only)
+    function performSearch() {
+        if (isSearching) return;
+        
+        const query = searchInput.value.trim();
+        if (!query) return;
+        
+        isSearching = true;
+        
+        // Show loading indicator
+        if (usersListContainer) usersListContainer.classList.add('d-none');
+        if (noResults) noResults.classList.add('d-none');
+        if (loadingIndicator) loadingIndicator.classList.remove('d-none');
+        
+        // Make API request to search for users
+        fetch(`/api/search?query=${encodeURIComponent(query)}`)
+            .then(response => response.json())
+            .then(data => {
+                // Hide loading indicator
+                if (loadingIndicator) loadingIndicator.classList.add('d-none');
+                
+                if (data.users && data.users.length > 0) {
+                    // Display search results
+                    renderUsers(data.users, data.has_more);
+                    if (usersListContainer) usersListContainer.classList.remove('d-none');
+                } else {
+                    // Show no results message
+                    if (usersListContainer) usersListContainer.classList.add('d-none');
+                    if (noResults) noResults.classList.remove('d-none');
+                }
+                
+                isSearching = false;
+            })
+            .catch(error => {
+                console.error('Search error:', error);
+                
+                // Hide loading indicator
+                if (loadingIndicator) loadingIndicator.classList.add('d-none');
+                if (usersListContainer) usersListContainer.classList.add('d-none');
+                
+                // Show error message
+                if (noResults) {
+                    noResults.innerHTML = `
+                        <div style="font-size: 3rem; color: var(--text-light);">
+                            <i class="bi bi-exclamation-triangle"></i>
+                        </div>
+                        <h5 class="mt-3">Error</h5>
+                        <p class="text-muted">An error occurred while searching. Please try again.</p>
+                    `;
+                    noResults.classList.remove('d-none');
+                }
+                
+                isSearching = false;
+            });
+    }
+    
+    // Render users list
+    function renderUsers(users, hasMore) {
+        // Create users list if it doesn't exist
+        if (!usersList) {
+            const newUsersList = document.createElement('ul');
+            newUsersList.id = 'users-list';
+            newUsersList.className = 'list-group list-group-flush';
+            usersListContainer.innerHTML = '';
+            usersListContainer.appendChild(newUsersList);
+        }
+        
+        const list = document.getElementById('users-list');
+        
+        // Clear list if it's a new search
+        if (currentPage === 1) {
+            list.innerHTML = '';
+        }
+        
+        // Render each user
+        users.forEach(user => {
+            const listItem = document.createElement('li');
+            listItem.className = 'list-group-item user-item';
+            listItem.innerHTML = `
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        <img src="${user.profile_pic_url || '/static/images/default-profile.png'}" 
+                             class="profile-pic me-3" alt="${user.Username}">
+                        <div>
+                            <a href="/profile/${user.Username}" class="text-decoration-none">
+                                <h6 class="mb-0 username-text">${user.Username}</h6>
+                            </a>
+                            <small class="text-muted profile-name-text">${user.Bio || ''}</small>
+                            ${user.mutual_count && user.mutual_count > 0 ? `
+                            ` : ''}
+                        </div>
+                    </div>
+                    ${user.Username !== '{{ current_username }}' ? `
+                    <button class="btn btn-sm ${user.is_following ? 'btn-outline-secondary' : 'btn-primary'} rounded-pill follow-button" 
+                            data-username="${user.Username}">
+                        ${user.is_following ? 'Following' : 'Follow'}
+                    </button>
+                    ` : ''}
+                </div>
+            `;
+            list.appendChild(listItem);
+        });
+        
+        // Add follow button event listeners
+        list.querySelectorAll('.follow-button:not([data-initialized])').forEach(button => {
+            button.setAttribute('data-initialized', 'true');
+            button.addEventListener('click', handleFollowUnfollow);
+        });
+        
+        // Update or hide load more button
+        const loadMoreContainer = document.getElementById('load-more-container');
+        if (loadMoreContainer) {
+            if (hasMore) {
+                loadMoreContainer.style.display = '';
+                loadMoreBtn.setAttribute('data-page', currentPage + 1);
+            } else {
+                loadMoreContainer.style.display = 'none';
+            }
+        } else if (hasMore && users.length >= 20) {
+            // Create load more button if it doesn't exist
+            const container = document.createElement('div');
+            container.id = 'load-more-container';
+            container.className = 'text-center p-3 border-top';
+            container.innerHTML = `
+                <button class="btn btn-outline-primary" id="load-more-btn" data-page="${currentPage + 1}">Load More</button>
+            `;
+            usersListContainer.appendChild(container);
+            
+            // Add event listener to new button
+            document.getElementById('load-more-btn').addEventListener('click', loadMoreUsers);
+        }
+        
+        // Hide empty state
+        if (emptyState) emptyState.style.display = 'none';
+    }
+    
+
+    
+    // Handle follow/unfollow button clicks
+    function handleFollowUnfollow() {
+        const button = this;
+        const username = button.getAttribute('data-username');
+        const isFollowing = button.textContent.trim() === 'Following';
+        
+        // Disable button during request
+        button.disabled = true;
+        
+        // Optimistic UI update
+        button.textContent = isFollowing ? 'Follow' : 'Following';
+        button.classList.toggle('btn-primary');
+        button.classList.toggle('btn-outline-secondary');
+        
+        // Make API request
+        fetch(`/follow/${username}`, {
+            method: isFollowing ? 'DELETE' : 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Re-enable button
+            button.disabled = false;
+            
+            // Handle successful response
+            console.log(`${isFollowing ? 'Unfollowed' : 'Followed'} ${username}`, data);
+        })
+        .catch(error => {
+            // Re-enable button
+            button.disabled = false;
+            
+            // Revert button state on error
+            button.textContent = isFollowing ? 'Following' : 'Follow';
+            button.classList.toggle('btn-primary');
+            button.classList.toggle('btn-outline-secondary');
+            
+            console.error('Error:', error);
+            alert('An error occurred. Please try again.');
+        });
+    }
+    
+   
+    
+    // Initialize follow buttons
+    document.querySelectorAll('.follow-button').forEach(button => {
+        button.addEventListener('click', handleFollowUnfollow);
+    });
+</script>
+{% endblock %}
