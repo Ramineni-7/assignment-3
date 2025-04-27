@@ -1,5 +1,6 @@
 import datetime
 from typing import Dict, Optional
+from uuid import UUID
 from fastapi import FastAPI, File, HTTPException, Request,Form, Depends, Response, UploadFile
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -8,7 +9,7 @@ from google.auth.transport import requests
 from google.cloud import firestore,storage
 import google.oauth2.id_token
 from fastapi.responses import RedirectResponse
-from models.models import  Post, PostInput, UserProfileUpdate
+from models.models import  CommentInput, Post, PostInput, UserProfileUpdate
 from services.service import Service
 import local_constants
 import starlette.status as status
@@ -139,10 +140,10 @@ async def upload_file(request:Request,file_name: UploadFile = File(...)):
         return JSONResponse(content={"status": True, "filename": file_name.filename}) 
     except Exception as e:
         print(e)
-        return JSONResponse(status_code=500,content="uploaded failed")
+        return JSONResponse(status_code=500,content={"error": str(e)})
     
-@app.get("/profile",response_class=HTMLResponse)
-def profile(request:Request):
+@app.get("/profile/{username}",response_class=HTMLResponse)
+def profile(request:Request,username:str):
     try:
         user = check_login_and_return_user(request)
         if user is None:
@@ -150,10 +151,24 @@ def profile(request:Request):
             "main.html",
             {"request":request,"user":None}
         )
-        posts = Service.get_posts(user)
+        if username == 'me':
+            data = Service.get_all_posts(user,user.Username)
+        else:
+            data = Service.get_all_posts(user,username)
         return templates.TemplateResponse(
             "profile.html",
-            {"request":request,"posts":posts,"is_own_profile":True,"user":user}
+            {
+                "request": request,
+                "posts": data['posts'],
+                "is_own_profile": data['is_own_profile'],
+                "user": user,
+                "profile": data['profile'],
+                "profile_username": data['profile_username'],
+                "profile_name": data['profile_username'],
+                "bio": data['bio'],
+                "profile_pic_url":data['profile_pic_url'],
+                "is_following": data['is_following']
+            }
         )
     except Exception as e:
         print(e)
@@ -221,7 +236,7 @@ def followers_page(request: Request):
             )
         
         followers = Service.get_all_user_followers(user)
-
+        print(followers)
         return templates.TemplateResponse("users.html", {
             "request": request,
             "mode": "followers",
@@ -247,7 +262,7 @@ def get_all_user_following(request:Request):
             )
         
         following = Service.get_all_user_following(user)
-
+        print(following)
         return templates.TemplateResponse("users.html", {
             "request": request,
             "mode": "following",
@@ -276,3 +291,43 @@ def update_user_profile(request:Request,profile_data:UserProfileUpdate):
     except Exception as e:
         print(f"Error updating user profile: {str(e)}")
         return {"status": False, "message": f"Failed to update profile: {str(e)}"}
+    
+@app.post("/posts/{post_id}/comments",response_class=JSONResponse)
+def add_comment(request:Request,post_id:UUID,cmoment_input:CommentInput):
+    try:
+        user = check_login_and_return_user(request)
+        if user is None:
+            return templates.TemplateResponse(
+                "main.html",
+                {"request":request,"user":None}
+            )
+        Service.add_comment(user,post_id,cmoment_input)
+        return JSONResponse({
+            "success": True, 
+            "comment": {
+                "username": user.Username, 
+                "text": cmoment_input.text,
+                "timestamp": datetime.datetime.utcnow().isoformat()
+            }
+        })
+    except Exception as e:
+         print(e)
+         return JSONResponse({
+            "success": False, 
+            "message": f"Failed to add comment: {str(e)}"
+        })
+    
+@app.get('/posts/{post_id}/comments',response_class=JSONResponse)
+def get_comments(request:Request,post_id):
+    print("hit atleasst")
+    try:
+        user = check_login_and_return_user(request)
+        if user is None:
+            return templates.TemplateResponse(
+                "main.html",
+                {"request":request,"user":None}
+            )
+        comments = Service.get_comments(post_id)
+        return {"comments":comments}
+    except Exception as e:
+        return {"status": False, "message": f"Failed to fetch comment: {str(e)}"}
