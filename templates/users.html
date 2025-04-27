@@ -74,8 +74,8 @@
                                         <img src="/images/file_name={{ user.profile_pic_url | urlencode }}" 
                                              class="profile-pic me-3" alt="{{ user.username }}">
                                         <div>
-                                            <a href="/profile/{{ user.username }}" class="text-decoration-none">
-                                                <h6 class="mb-0 username-text">{{ user.Username }}</h6>
+                                            <a href="/profile/{{ user.Username }}" class="text-decoration-none">
+                                                <h6 class="mb-0 username-text">{{ user.Profile_Name }}</h6>
                                             </a>
                                             <small class="text-muted profile-name-text">{{ user.Bio or '' }}</small>
                                             {% if user.mutual_count and user.mutual_count > 0 %}
@@ -349,7 +349,7 @@
                              class="profile-pic me-3" alt="${user.Username}">
                         <div>
                             <a href="/profile/${user.Username}" class="text-decoration-none">
-                                <h6 class="mb-0 username-text">${user.Username}</h6>
+                                <h6 class="mb-0 username-text">${user.Profile_Name}</h6>
                             </a>
                             <small class="text-muted profile-name-text">${user.Bio || ''}</small>
                             ${user.mutual_count && user.mutual_count > 0 ? `

@@ -26,15 +26,15 @@
         <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3">
           <h2 class="fs-3 mb-3 mb-md-0">
             {% if is_own_profile %}
-              {{ user.Username }}
+              {{ user.Profile_Name }}
             {% else %}
-              {{ profile.name }}
+              {{ profile.Profile_Name }}
             {% endif %}
           </h2>
           
           <div>
             {% if is_own_profile %}
-              <a href="/edit_profile" class="btn btn-outline-dark">Edit Profile</a>
+              <!-- <a href="/edit_profile" class="btn btn-outline-dark">Edit Profile</a> -->
             {% else %}
               <button id="follow-button" 
                      class="btn {{ 'btn-outline-dark' if is_following else 'btn-primary' }}" 
@@ -52,12 +52,12 @@
         <div class="d-flex mb-3">
           <div class="me-4"><strong>{{ posts | length }}</strong> posts</div>
           <div class="me-4">
-            <a href="/followers/{{ profile_username }}" class="text-decoration-none text-dark">
+            <!-- <a href="/followers/{{ profile_username }}" class="text-decoration-none text-dark"> -->
               <strong>{{ profile.Followers | length if profile.Followers else 0 }}</strong> followers
             </a>
           </div>
           <div>
-            <a href="/following/{{ profile_username }}" class="text-decoration-none text-dark">
+            <!-- <a href="/following/{{ profile_username }}" class="text-decoration-none text-dark"> -->
               <strong>{{ profile.Following | length if profile.Following else 0 }}</strong> following
             </a>
           </div>
@@ -105,7 +105,7 @@
           {% for post in posts %}
           <div class="col-md-4 col-sm-6">
             <div class="position-relative rounded overflow-hidden">
-              <a href="/post/{{ post.Id }}" class="d-block">
+              <!-- <a href="/post/{{ post.Id }}" class="d-block"> -->
                 <img src="/images/file_name={{ post.Image_ref | urlencode }}" 
                      class="w-100" style="aspect-ratio: 1; object-fit: cover;" alt="Post image">
                 <div class="position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-flex align-items-center justify-content-center post-overlay">
