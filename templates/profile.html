@@ -1,202 +1,224 @@
 {% extends "home.html" %}
 
 {% block content %}
-<!-- Profile Header -->
-<div class="card mb-4">
-    <div class="card-body py-4">
-        <div class="row align-items-center">
-            <div class="col-md-4 text-center">
-                <div class="position-relative d-inline-block">
-                    <img src="{{ profile_pic_url or '/static/images/default-profile.png' }}" class="profile-pic-lg" alt="{{ profile_username }}">
-                    {% if is_own_profile %}
-                    <div class="position-absolute bottom-0 end-0">
-                        <a href="/edit_profile" class="btn btn-sm btn-primary rounded-circle">
-                            <i class="bi bi-pencil"></i>
-                        </a>
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-            <div class="col-md-8">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    {% if is_own_profile %}
-                        <h3 class="mb-0">{{ user.Username }}</h3>
-                    {% else %}
-                    <h3 class="mb-0">{{profile.name}}</h3>
-                    {% endif %}
-                    {% if is_own_profile %}
-                        <a href="/edit_profile" class="btn btn-outline-dark">Edit Profile</a>
-                    {% else %}
-                        <div>
-                            <button id="follow-button" class="btn {{ 'btn-outline-dark' if is_following else 'btn-primary' }}" data-username="{{ profile_username }}">
-                                {{ 'Following' if is_following else 'Follow' }}
-                            </button>
-                            <button class="btn btn-outline-dark ms-2">
-                                <i class="bi bi-chat-dots"></i> Message
-                            </button>
-                        </div>
-                    {% endif %}
-                </div>
-                
-                <!-- User Stats -->
-                <div class="d-flex mb-3">
-                    <div class="me-4"><strong>{{ posts | length }}</strong> posts</div>
-                    <div class="me-4">
-                        <a href="/followers/{{ profile_username }}" class="text-decoration-none text-dark">
-                            <strong>{{ user.Followers | length }}</strong> followers
-                        </a>
-                    </div>
-                    <div>
-                        <a href="/following/{{ profile_username }}" class="text-decoration-none text-dark">
-                            <strong>{{ user.Following | length }}</strong> following
-                        </a>
-                    </div>
-                </div>
-                
-                <!-- Bio -->
-                <div class="bio">
-                    <h6 class="fw-bold">{{ profile_name }}</h6>
-                    <p class="mb-0">{{ bio }}</p>
-                    {% if website %}
-                        <a href="{{ website }}" target="_blank" class="text-decoration-none">{{ website }}</a>
-                    {% endif %}
-                </div>
-            </div>
+<div class="container py-5">
+  <!-- Profile Header -->
+  <div class="bg-white rounded-3 shadow-sm mb-4 p-4">
+    <div class="row align-items-center">
+      <!-- Profile Image -->
+      <div class="col-md-3 text-center mb-4 mb-md-0">
+        <div class="position-relative d-inline-block">
+          <img src="/images/file_name={{ profile_pic_url | urlencode }}" 
+               class="rounded-circle" width="150" height="150" 
+               alt="{{ profile_username }}" style="object-fit: cover;">
+          {% if is_own_profile %}
+          <div class="position-absolute bottom-0 end-0">
+            <a href="/edit_profile" class="btn btn-sm btn-primary rounded-circle">
+              <i class="bi bi-pencil"></i>
+            </a>
+          </div>
+          {% endif %}
         </div>
+      </div>
+      
+      <!-- Profile Info -->
+      <div class="col-md-9">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3">
+          <h2 class="fs-3 mb-3 mb-md-0">
+            {% if is_own_profile %}
+              {{ user.Username }}
+            {% else %}
+              {{ profile.name }}
+            {% endif %}
+          </h2>
+          
+          <div>
+            {% if is_own_profile %}
+              <a href="/edit_profile" class="btn btn-outline-dark">Edit Profile</a>
+            {% else %}
+              <button id="follow-button" 
+                     class="btn {{ 'btn-outline-dark' if is_following else 'btn-primary' }}" 
+                     data-username="{{ profile_username }}">
+                {{ 'Following' if is_following else 'Follow' }}
+              </button>
+              <button class="btn btn-outline-dark ms-2">
+                <i class="bi bi-chat-dots"></i> Message
+              </button>
+            {% endif %}
+          </div>
+        </div>
+        
+        <!-- User Stats -->
+        <div class="d-flex mb-3">
+          <div class="me-4"><strong>{{ posts | length }}</strong> posts</div>
+          <div class="me-4">
+            <a href="/followers/{{ profile_username }}" class="text-decoration-none text-dark">
+              <strong>{{ profile.Followers | length if profile.Followers else 0 }}</strong> followers
+            </a>
+          </div>
+          <div>
+            <a href="/following/{{ profile_username }}" class="text-decoration-none text-dark">
+              <strong>{{ profile.Following | length if profile.Following else 0 }}</strong> following
+            </a>
+          </div>
+        </div>
+        
+        <!-- Bio -->
+        <div class="bio">
+          <div class="fw-bold">{{ profile_name }}</div>
+          <p class="mb-2">{{ bio }}</p>
+          {% if website %}
+            <a href="{{ website }}" target="_blank" class="text-decoration-none">{{ website }}</a>
+          {% endif %}
+        </div>
+      </div>
     </div>
-</div>
+  </div>
 
-<!-- Profile Navigation -->
-<div class="profile-nav mb-4">
-    <ul class="nav nav-tabs justify-content-center">
-        <li class="nav-item">
-            <a class="nav-link active" href="#posts" data-bs-toggle="tab">
-                <i class="bi bi-grid-3x3"></i> Posts
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="#saved" data-bs-toggle="tab">
-                <i class="bi bi-bookmark"></i> Saved
-            </a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link" href="#tagged" data-bs-toggle="tab">
-                <i class="bi bi-tag"></i> Tagged
-            </a>
-        </li>
+  <!-- Profile Navigation -->
+  <div class="bg-white rounded-3 shadow-sm mb-4">
+    <ul class="nav nav-tabs nav-fill border-bottom-0 justify-content-center">
+      <li class="nav-item">
+        <a class="nav-link active py-3" href="#posts" data-bs-toggle="tab">
+          <i class="bi bi-grid-3x3 me-2"></i>Posts
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link py-3" href="#saved" data-bs-toggle="tab">
+          <i class="bi bi-bookmark me-2"></i>Saved
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link py-3" href="#tagged" data-bs-toggle="tab">
+          <i class="bi bi-tag me-2"></i>Tagged
+        </a>
+      </li>
     </ul>
-</div>
+  </div>
 
-<!-- Tab Content -->
-<div class="tab-content">
+  <!-- Tab Content -->
+  <div class="tab-content">
     <!-- Posts Tab -->
     <div class="tab-pane fade show active" id="posts">
-        {% if posts %}
-            <div class="post-grid">
-                {% for post in posts %}
-                <div class="post-grid-item">
-                    <a href="/post/{{ post.Id }}">
-                        <img src="/images/file_name={{ post.Image_ref | urlencode }}" alt="Post image">
-                        <div class="post-overlay">
-                            <div class="post-overlay-stats">
-                                <div class="post-overlay-stat">
-                                    <i class="bi bi-heart-fill"></i> {{ post.likes|default(0) }}
-                                </div>
-                                <div class="post-overlay-stat">
-                                    <i class="bi bi-chat-fill"></i> {{ post.comments|length|default(0) }}
-                                </div>
-                            </div>
-                        </div>
-                    </a>
+      {% if posts %}
+        <div class="row g-3">
+          {% for post in posts %}
+          <div class="col-md-4 col-sm-6">
+            <div class="position-relative rounded overflow-hidden">
+              <a href="/post/{{ post.Id }}" class="d-block">
+                <img src="/images/file_name={{ post.Image_ref | urlencode }}" 
+                     class="w-100" style="aspect-ratio: 1; object-fit: cover;" alt="Post image">
+                <div class="position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-flex align-items-center justify-content-center post-overlay">
+                  <div class="d-flex text-white">
+                    <div class="me-4">
+                      <i class="bi bi-heart-fill me-1"></i>
+                      <span>{{ post.likes|default(0) }}</span>
+                    </div>
+                    <div>
+                      <i class="bi bi-chat-fill me-1"></i>
+                      <span>{{ post.comments|length|default(0) }}</span>
+                    </div>
+                  </div>
                 </div>
-                {% endfor %}
+              </a>
             </div>
-        {% else %}
-            <div class="text-center py-5">
-                <div style="font-size: 5rem; color: var(--text-light);">
-                    <i class="bi bi-camera"></i>
-                </div>
-                <h5 class="mt-4">No Posts Yet</h5>
-                {% if is_own_profile %}
-                    <p class="text-muted">Share photos and videos that will appear on your profile</p>
-                    <a href="/post" class="btn btn-primary mt-3">Share Your First Photo</a>
-                {% else %}
-                    <p class="text-muted">When {{ profile_username }} shares photos, you'll see them here.</p>
-                {% endif %}
-            </div>
-        {% endif %}
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="bg-white rounded-3 shadow-sm py-5 text-center">
+          <div class="text-secondary" style="font-size: 4rem;">
+            <i class="bi bi-camera"></i>
+          </div>
+          <h5 class="mt-4">No Posts Yet</h5>
+          {% if is_own_profile %}
+            <p class="text-muted">Share photos and videos that will appear on your profile</p>
+            <a href="/post" class="btn btn-primary mt-3">Share Your First Photo</a>
+          {% else %}
+            <p class="text-muted">When {{ profile_username }} shares photos, you'll see them here.</p>
+          {% endif %}
+        </div>
+      {% endif %}
     </div>
     
     <!-- Saved Tab -->
     <div class="tab-pane fade" id="saved">
-        <div class="text-center py-5">
-            <div style="font-size: 5rem; color: var(--text-light);">
-                <i class="bi bi-bookmark"></i>
-            </div>
-            <h5 class="mt-4">Save</h5>
-            <p class="text-muted">Save photos and videos that you want to see again.</p>
+      <div class="bg-white rounded-3 shadow-sm py-5 text-center">
+        <div class="text-secondary" style="font-size: 4rem;">
+          <i class="bi bi-bookmark"></i>
         </div>
+        <h5 class="mt-4">Save</h5>
+        <p class="text-muted">Save photos and videos that you want to see again.</p>
+      </div>
     </div>
     
     <!-- Tagged Tab -->
     <div class="tab-pane fade" id="tagged">
-        <div class="text-center py-5">
-            <div style="font-size: 5rem; color: var(--text-light);">
-                <i class="bi bi-tag"></i>
-            </div>
-            <h5 class="mt-4">Photos of you</h5>
-            <p class="text-muted">When people tag you in photos, they'll appear here.</p>
+      <div class="bg-white rounded-3 shadow-sm py-5 text-center">
+        <div class="text-secondary" style="font-size: 4rem;">
+          <i class="bi bi-tag"></i>
         </div>
+        <h5 class="mt-4">Photos of you</h5>
+        <p class="text-muted">When people tag you in photos, they'll appear here.</p>
+      </div>
     </div>
+  </div>
 </div>
 
+<style>
+  .post-overlay {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  @media (min-width: 768px) {
+    .position-relative:hover .post-overlay {
+      opacity: 1;
+    }
+  }
+  
+  @media (max-width: 767px) {
+    .post-overlay {
+      display: none;
+    }
+  }
+</style>
+
 <script>
-    // Handle follow/unfollow
-    const followButton = document.getElementById('follow-button');
-    if (followButton) {
-        followButton.addEventListener('click', function() {
-            const username = this.getAttribute('data-username');
-            const isFollowing = this.textContent.trim() === 'Following';
-            
-            // Make API call to follow/unfollow
-            fetch(`/api/follow/${username}`, {
-                method: isFollowing ? 'DELETE' : 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    this.textContent = isFollowing ? 'Follow' : 'Following';
-                    this.classList.toggle('btn-primary');
-                    this.classList.toggle('btn-outline-dark');
-                    
-                    // Update follower count without page reload
-                    const followerCountEl = document.querySelector('a[href^="/followers/"] strong');
-                    if (followerCountEl) {
-                        let count = parseInt(followerCountEl.textContent);
-                        followerCountEl.textContent = isFollowing ? count - 1 : count + 1;
-                    }
-                }
-            })
-            .catch(error => {
-                console.error('Follow/unfollow error:', error);
-                alert('An error occurred. Please try again.');
-            });
-        });
-    }
-    
-    // Hover effect for grid items on desktop
-    if (window.innerWidth > 768) {
-        document.querySelectorAll('.post-grid-item').forEach(item => {
-            item.addEventListener('mouseenter', function() {
-                this.querySelector('.post-overlay').style.opacity = '1';
-            });
-            item.addEventListener('mouseleave', function() {
-                this.querySelector('.post-overlay').style.opacity = '0';
-            });
-        });
-    }
+  // Handle follow/unfollow
+  const followButton = document.getElementById('follow-button');
+  if (followButton) {
+    followButton.addEventListener('click', function() {
+      const username = this.getAttribute('data-username');
+      const isFollowing = this.textContent.trim() === 'Following';
+      
+      // Make API call to follow/unfollow
+      fetch(`/api/follow/${username}`, {
+        method: isFollowing ? 'DELETE' : 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          this.textContent = isFollowing ? 'Follow' : 'Following';
+          this.classList.toggle('btn-primary');
+          this.classList.toggle('btn-outline-dark');
+          
+          // Update follower count without page reload
+          const followerCountEl = document.querySelector('a[href^="/followers/"] strong');
+          if (followerCountEl) {
+            let count = parseInt(followerCountEl.textContent);
+            followerCountEl.textContent = isFollowing ? count - 1 : count + 1;
+          }
+        }
+      })
+      .catch(error => {
+        console.error('Follow/unfollow error:', error);
+        alert('An error occurred. Please try again.');
+      });
+    });
+  }
 </script>
 {% endblock %}
