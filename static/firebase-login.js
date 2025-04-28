@@ -90,10 +90,8 @@ function updateUI(cookie) {
     const token = parseCookieToken(cookie);
     const isLoggedIn = token.length > 0;
     
-    // Remove the loading state
     document.getElementById("login-box").classList.remove("auth-pending");
     
-    // Rest of your existing function stays the same
     document.getElementById("login-box").hidden = isLoggedIn;
     document.getElementById("sign-out").hidden = !isLoggedIn;
     
