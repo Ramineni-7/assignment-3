@@ -188,7 +188,7 @@
         </div>
     </nav>
 
-    <!-- Login Box - Will be hidden once logged in -->
+
     <div id="login-box" class="row justify-content-center auth-pending">
         <div class="col-md-6 col-lg-4">
             <div class="card login-card gradient-border">
@@ -221,12 +221,10 @@
         </div>
     </div>
 
-    <!-- Main Content Area - Search/Users -->
     <div id="content" class="container content-container">
         <div class="row justify-content-center">
             <div class="col-md-8 col-lg-6">
                 <div class="card">
-                    <!-- Page Header Based on Mode -->
                     <div class="card-header bg-white p-3">
                         <div class="d-flex justify-content-between align-items-center">
                             {% if mode == 'search' %}
@@ -247,7 +245,6 @@
                                 </div>
                             {% endif %}
                             
-                            <!-- Mode Tabs -->
                             {% if mode == 'followers' or mode == 'following' %}
                                 <div class="nav nav-pills">
                                     <a href="/followers/" class="nav-link {% if mode == 'followers' %}active{% endif %}">
@@ -261,7 +258,6 @@
                         </div>
                     </div>
                     
-                    <!-- Search Bar -->
                     <div class="p-3 border-bottom">
                         <div class="input-group">
                             <span class="input-group-text bg-light border-end-0">
@@ -277,7 +273,6 @@
                     </div>
                     
                     <div class="card-body p-0">
-                        <!-- Loading Indicator -->
                         <div id="loading-indicator" class="text-center py-4 d-none">
                             <div class="spinner-border text-primary" role="status">
                                 <span class="visually-hidden">Loading...</span>
@@ -285,7 +280,6 @@
                             <p class="mt-2">Loading...</p>
                         </div>
                         
-                        <!-- Users List -->
                         <div id="users-list-container">
                             {% if users %}
                                 <ul class="list-group list-group-flush" id="users-list">
@@ -348,7 +342,6 @@
                             {% endif %}
                         </div>
                         
-                        <!-- No Results State (initially hidden) -->
                         <div id="no-results" class="text-center py-5 d-none">
                             <div style="font-size: 3rem; color: var(--text-light);">
                                 <i class="bi bi-emoji-frown"></i>
@@ -362,12 +355,10 @@
         </div>
     </div>
 
-    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script type="module" src="/static/firebase-login.js"></script>
     
     <script>
-        // Elements
         const searchInput = document.getElementById('search-input');
         const searchButton = document.getElementById('search-button');
         const usersList = document.getElementById('users-list');
@@ -377,15 +368,12 @@
         const emptyState = document.getElementById('empty-state');
         const noResults = document.getElementById('no-results');
         
-        // Variables
         const mode = '{{ mode }}';
         const profileUsername = '{{ profile_username }}';
         let isSearching = false;
         let currentPage = 1;
         
-        // Initialize search functionality
         if (searchInput) {
-            // Filter the list on input for followers/following mode
             if (mode === 'followers' || mode === 'following') {
                 searchInput.addEventListener('input', function() {
                     const searchValue = this.value.toLowerCase();
@@ -401,7 +389,6 @@
                         }
                     });
                     
-                    // Check if no users are visible after filtering
                     const visibleUsers = Array.from(document.querySelectorAll('.user-item')).filter(
                         item => item.style.display !== 'none'
                     );
@@ -414,7 +401,6 @@
                 });
             }
             
-            // Perform search on Enter key in search mode
             if (mode === 'search') {
                 searchInput.addEventListener('keypress', function(e) {
                     if (e.key === 'Enter') {
@@ -422,14 +408,12 @@
                     }
                 });
                 
-                // Search button click handler
                 if (searchButton) {
                     searchButton.addEventListener('click', performSearch);
                 }
             }
         }
         
-        // Perform search (search mode only)
         function performSearch() {
             if (isSearching) return;
             
@@ -438,24 +422,19 @@
             
             isSearching = true;
             
-            // Show loading indicator
             if (usersListContainer) usersListContainer.classList.add('d-none');
             if (noResults) noResults.classList.add('d-none');
             if (loadingIndicator) loadingIndicator.classList.remove('d-none');
             
-            // Make API request to search for users
             fetch(`/api/search?query=${encodeURIComponent(query)}`)
                 .then(response => response.json())
                 .then(data => {
-                    // Hide loading indicator
                     if (loadingIndicator) loadingIndicator.classList.add('d-none');
                     
                     if (data.users && data.users.length > 0) {
-                        // Display search results
                         renderUsers(data.users, data.has_more);
                         if (usersListContainer) usersListContainer.classList.remove('d-none');
                     } else {
-                        // Show no results message
                         if (usersListContainer) usersListContainer.classList.add('d-none');
                         if (noResults) noResults.classList.remove('d-none');
                     }
@@ -465,11 +444,9 @@
                 .catch(error => {
                     console.error('Search error:', error);
                     
-                    // Hide loading indicator
                     if (loadingIndicator) loadingIndicator.classList.add('d-none');
                     if (usersListContainer) usersListContainer.classList.add('d-none');
                     
-                    // Show error message
                     if (noResults) {
                         noResults.innerHTML = `
                             <div style="font-size: 3rem; color: var(--text-light);">
@@ -485,9 +462,7 @@
                 });
         }
         
-        // Render users list
         function renderUsers(users, hasMore) {
-            // Create users list if it doesn't exist
             if (!usersList) {
                 const newUsersList = document.createElement('ul');
                 newUsersList.id = 'users-list';
@@ -498,12 +473,10 @@
             
             const list = document.getElementById('users-list');
             
-            // Clear list if it's a new search
             if (currentPage === 1) {
                 list.innerHTML = '';
             }
             
-            // Render each user
             users.forEach(user => {
                 console.log(user);
                 const listItem = document.createElement('li');
@@ -536,13 +509,11 @@
                 list.appendChild(listItem);
             });
             
-            // Add follow button event listeners
             list.querySelectorAll('.follow-button:not([data-initialized])').forEach(button => {
                 button.setAttribute('data-initialized', 'true');
                 button.addEventListener('click', handleFollowUnfollow);
             });
             
-            // Update or hide load more button
             const loadMoreContainer = document.getElementById('load-more-container');
             if (loadMoreContainer) {
                 if (hasMore) {
@@ -552,7 +523,6 @@
                     loadMoreContainer.style.display = 'none';
                 }
             } else if (hasMore && users.length >= 20) {
-                // Create load more button if it doesn't exist
                 const container = document.createElement('div');
                 container.id = 'load-more-container';
                 container.className = 'text-center p-3 border-top';
@@ -561,29 +531,23 @@
                 `;
                 usersListContainer.appendChild(container);
                 
-                // Add event listener to new button
                 document.getElementById('load-more-btn').addEventListener('click', loadMoreUsers);
             }
             
-            // Hide empty state
             if (emptyState) emptyState.style.display = 'none';
         }
         
-        // Handle follow/unfollow button clicks
         function handleFollowUnfollow() {
             const button = this;
             const username = button.getAttribute('data-username');
             const isFollowing = button.textContent.trim() === 'Following';
             
-            // Disable button during request
             button.disabled = true;
             
-            // Optimistic UI update
             button.textContent = isFollowing ? 'Follow' : 'Following';
             button.classList.toggle('btn-primary');
             button.classList.toggle('btn-outline-secondary');
             
-            // Make API request
             fetch(`/follow/${username}`, {
                 method: isFollowing ? 'DELETE' : 'POST',
                 headers: {
@@ -597,17 +561,13 @@
                 return response.json();
             })
             .then(data => {
-                // Re-enable button
                 button.disabled = false;
                 
-                // Handle successful response
                 console.log(`${isFollowing ? 'Unfollowed' : 'Followed'} ${username}`, data);
             })
             .catch(error => {
-                // Re-enable button
                 button.disabled = false;
                 
-                // Revert button state on error
                 button.textContent = isFollowing ? 'Following' : 'Follow';
                 button.classList.toggle('btn-primary');
                 button.classList.toggle('btn-outline-secondary');
@@ -617,7 +577,6 @@
             });
         }
         
-        // Initialize follow buttons
         document.querySelectorAll('.follow-button').forEach(button => {
             button.addEventListener('click', handleFollowUnfollow);
         });

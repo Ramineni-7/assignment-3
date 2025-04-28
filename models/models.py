@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from datetime import date, time, datetime
 from uuid import UUID
@@ -22,21 +22,24 @@ class User(BaseModel):
     Id:UUID
     Username:str
     Email:str
-    Followers: List[str] = []
-    Following: List[str] = []
+    Followers: List[Dict] = []
+    Following: List[Dict] = []
     Bio:Optional[str] = None
     Profile_Pic_Url: Optional[str] = None
+    Profile_Name:Optional[str] = None
 
 class UserProfileUpdate(BaseModel):
     username: str
     bio: Optional[str] = None
     profile_pic_url: Optional[str] = None
+    profile_name:Optional[str] = None
 
 class Comment(BaseModel):
     PostId:UUID
     Text:str
     Id:UUID
-    UserId:UUID
+    Username:str
+    Date:Optional[datetime] = None
 
 
 class PostSchemaOut(BaseModel):
@@ -50,7 +53,7 @@ class PostSchemaOut(BaseModel):
 class PostInput(BaseModel):
     image_ref:str
     caption:str
-    location:str
+    location:Optional[str] = None
 
 
 class PostOutput(BaseModel):
@@ -63,3 +66,7 @@ class PostOutput(BaseModel):
     Image_ref:str
     Comments: List[Comment] = None
     User_Pic:Optional[str] = None
+
+
+class CommentInput(BaseModel):
+    text:str

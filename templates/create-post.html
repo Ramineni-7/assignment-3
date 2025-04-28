@@ -1,313 +1,460 @@
-{% extends "home.html" %}
-
-{% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-10 col-lg-8">
-        <div class="card">
-            <div class="card-header bg-white">
-                <h4 class="mb-0 text-center">Create New Post</h4>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InstaClone - Create Post</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary-color: #405DE6;
+            --primary-gradient: linear-gradient(45deg, #405DE6, #5851DB, #833AB4, #C13584, #E1306C, #FD1D1D);
+            --secondary-color: #E1306C;
+            --bg-color: #FAFAFA;
+            --post-bg: #FFFFFF;
+            --text-dark: #262626;
+            --text-light: #8E8E8E;
+            --border-color: #DBDBDB;
+        }
+        
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        
+        .navbar {
+            background-color: var(--post-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 10px 0;
+        }
+        
+        .navbar-brand {
+            font-family: 'Instagram Sans', cursive;
+            font-size: 2rem;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: bold;
+        }
+        
+        .content-container {
+            margin-top: 80px;
+            padding-bottom: 40px;
+        }
+        
+        .card {
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        
+        .btn-primary {
+            background: var(--primary-gradient);
+            border: none;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        
+        .btn-outline-primary {
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-outline-primary:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .nav-icon {
+            font-size: 1.5rem;
+            margin: 0 10px;
+            color: var(--text-dark);
+        }
+        
+        .auth-pending {
+            visibility: hidden;
+        }
+        
+        /* Post Creation Specific Styles */
+        .upload-placeholder {
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background-color: #f8f9fa;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .upload-placeholder:hover {
+            background-color: #e9ecef;
+        }
+        
+        #image-preview-container {
+            min-height: 300px;
+        }
+        
+        #image-preview {
+            max-height: 400px;
+            object-fit: contain;
+        }
+        
+        .dragging {
+            background-color: var(--primary-color) !important;
+            color: white !important;
+            border: 2px dashed white !important;
+        }
+        
+        .dragging i, .dragging h5, .dragging p {
+            color: white !important;
+        }
+        
+        .border-danger {
+            border: 2px solid #dc3545 !important;
+            box-shadow: 0 0 5px rgba(220, 53, 69, 0.5);
+        }
+        
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary-color);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="/">InstaClone</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mx-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/"><i class="bi bi-house-fill nav-icon"></i></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/search"><i class="bi bi-search nav-icon"></i></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/post"><i class="bi bi-plus-square nav-icon"></i></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/profile/me"><i class="bi bi-person-circle nav-icon"></i></a>
+                    </li>
+                </ul>
+                <div class="d-flex">
+                    <button id="sign-out" class="btn btn-outline-danger" hidden>Sign Out</button>
+                </div>
             </div>
-            <div class="card-body">
-                <form id="create-post-form" enctype="multipart/form-data">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="upload-container mb-3 mb-md-0">
-                                <div id="upload-placeholder" class="upload-placeholder text-center p-5 border rounded">
-                                    <i class="bi bi-cloud-upload" style="font-size: 4rem; color: var(--text-light);"></i>
-                                    <h5 class="mt-3">Drag photos here</h5>
-                                    <p class="text-muted small">PNG or JPG only</p>
-                                    <label for="image-upload" class="btn btn-primary mt-2">
-                                        Select from computer
-                                    </label>
-                                    <input type="file" class="d-none" id="image-upload" name="image" accept="image/png,image/jpeg">
-                                </div>
-                                <div id="image-preview-container" class="d-none">
-                                    <div class="position-relative">
-                                        <img id="image-preview" class="img-fluid rounded w-100" alt="Image preview">
-                                        <button type="button" id="change-image" class="btn btn-sm btn-dark position-absolute top-0 end-0 m-2">
-                                            <i class="bi bi-arrow-repeat"></i> Change
-                                        </button>
-                                    </div>
-                                </div>
+        </div>
+    </nav>
+
+
+    <div id="login-box" class="row justify-content-center auth-pending">
+        <div class="col-md-6 col-lg-4">
+            <div class="card login-card gradient-border">
+                <div class="card-body text-center">
+                    <h1 class="login-logo navbar-brand">InstaClone</h1>
+                    <p class="text-muted mb-4">Sign in to see photos and videos from your friends.</p>
+                    <form>
+                        <div class="mb-3">
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                                <input type="email" class="form-control" id="email" placeholder="Email" required>
                             </div>
                         </div>
-                        
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label for="caption" class="form-label fw-bold">Caption</label>
-                                <textarea class="form-control" id="caption" name="caption" rows="5" placeholder="Write a caption..." required></textarea>
-                                <div class="form-text text-end" id="caption-counter">0/500</div>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label for="location" class="form-label fw-bold">Add Location</label>
-                                <div class="input-group">
-                                    <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
-                                    <input type="text" class="form-control" id="location" name="location" placeholder="Add location">
-                                </div>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">Advanced Settings</label>
-                                <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" id="turn-off-comments">
-                                    <label class="form-check-label" for="turn-off-comments">Turn off commenting</label>
-                                </div>
-                            </div>
-                            
-                            <div class="d-grid gap-2">
-                                <button type="submit" class="btn btn-primary">Share</button>
-                                <button type="button" class="btn btn-outline-secondary" onclick="window.history.back()">Cancel</button>
+                        <div class="mb-3">
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                                <input type="password" class="form-control" id="password" placeholder="Password" required>
                             </div>
                         </div>
-                    </div>
-                </form>
+                        <div class="d-grid gap-2">
+                            <button type="button" id="login" class="btn btn-primary">Log In</button>
+                            <div class="text-center my-3">
+                                <span class="text-muted">OR</span>
+                            </div>
+                            <button type="button" id="sign-up" class="btn btn-outline-primary">Sign Up</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<style>
-    .upload-placeholder {
-        min-height: 300px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        background-color: #f8f9fa;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-    
-    .upload-placeholder:hover {
-        background-color: #e9ecef;
-    }
-    
-    #image-preview-container {
-        min-height: 300px;
-    }
-    
-    #image-preview {
-        max-height: 400px;
-        object-fit: contain;
-    }
-    
-    .dragging {
-        background-color: var(--primary-color) !important;
-        color: white !important;
-        border: 2px dashed white !important;
-    }
-    
-    .dragging i, .dragging h5, .dragging p {
-        color: white !important;
-    }
-</style>
+    <div id="content" class="container content-container">
+        <div class="row justify-content-center">
+            <div class="col-md-10 col-lg-8">
+                <div class="card">
+                    <div class="card-header bg-white">
+                        <h4 class="mb-0 text-center">Create New Post</h4>
+                    </div>
+                    <div class="card-body">
+                        <form id="create-post-form" enctype="multipart/form-data">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="upload-container mb-3 mb-md-0">
+                                        <div id="upload-placeholder" class="upload-placeholder text-center p-5 border rounded">
+                                            <i class="bi bi-cloud-upload" style="font-size: 4rem; color: var(--text-light);"></i>
+                                            <h5 class="mt-3">Drag photos here</h5>
+                                            <p class="text-muted small">PNG or JPG only</p>
+                                            <label for="image-upload" class="btn btn-primary mt-2">
+                                                Select from computer
+                                            </label>
+                                            <input type="file" class="d-none" id="image-upload" name="image">
+                                        </div>
+                                        <div id="image-preview-container" class="d-none">
+                                            <div class="position-relative">
+                                                <img id="image-preview" class="img-fluid rounded w-100" alt="Image preview">
+                                                <button type="button" id="change-image" class="btn btn-sm btn-dark position-absolute top-0 end-0 m-2">
+                                                    <i class="bi bi-arrow-repeat"></i> Change
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="caption" class="form-label fw-bold">Caption</label>
+                                        <textarea class="form-control" id="caption" name="caption" rows="5" placeholder="Write a caption..." required></textarea>
+                                        <div class="form-text text-end" id="caption-counter">0/500</div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label for="location" class="form-label fw-bold">Add Location</label>
+                                        <div class="input-group">
+                                            <span class="input-group-text"><i class="bi bi-geo-alt"></i></span>
+                                            <input type="text" class="form-control" id="location" name="location" placeholder="Add location">
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label fw-bold">Advanced Settings</label>
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="turn-off-comments">
+                                            <label class="form-check-label" for="turn-off-comments">Turn off commenting</label>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="d-grid gap-2">
+                                        <button type="submit" class="btn btn-primary">Share</button>
+                                        <button type="button" class="btn btn-outline-secondary" onclick="window.history.back()">Cancel</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<script>
-const imageUpload = document.getElementById('image-upload');
-const imagePreview = document.getElementById('image-preview');
-const imagePreviewContainer = document.getElementById('image-preview-container');
-const uploadPlaceholder = document.getElementById('upload-placeholder');
-const caption = document.getElementById('caption');
-const captionCounter = document.getElementById('caption-counter');
-const maxCaptionLength = 500;
-
-// File input change event
-imageUpload.addEventListener('change', function() {
-    console.log('Change event triggered');
-    const file = this.files[0];
-    if (file) {
-        console.log('File selected:', file.name, 'Type:', file.type);
-        const fileType = file.type;
-        
-        if (fileType !== 'image/png' && fileType !== 'image/jpeg') {
-            alert('Only PNG or JPG files are allowed.');
-            this.value = '';
-            return;
-        }
-        
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            imagePreview.src = e.target.result;
-            uploadPlaceholder.classList.add('d-none');
-            imagePreviewContainer.classList.remove('d-none');
-        }
-        reader.readAsDataURL(file);
-    }
-});
-
-// Change image button
-document.getElementById('change-image').addEventListener('click', function() {
-    imageUpload.value = '';
-    uploadPlaceholder.classList.remove('d-none');
-    imagePreviewContainer.classList.add('d-none');
-});
-
-// Click on upload placeholder
-uploadPlaceholder.addEventListener('click', function() {
-    imageUpload.click();
-});
-
-// Caption counter
-caption.addEventListener('input', function() {
-    const length = this.value.length;
-    captionCounter.textContent = `${length}/${maxCaptionLength}`;
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="/static/firebase-login.js"></script>
     
-    if (length > maxCaptionLength) {
-        captionCounter.classList.add('text-danger');
-    } else {
-        captionCounter.classList.remove('text-danger');
-    }
-});
+    <script>
+        const imageUpload = document.getElementById('image-upload');
+        const imagePreview = document.getElementById('image-preview');
+        const imagePreviewContainer = document.getElementById('image-preview-container');
+        const uploadPlaceholder = document.getElementById('upload-placeholder');
+        const caption = document.getElementById('caption');
+        const captionCounter = document.getElementById('caption-counter');
+        const maxCaptionLength = 500;
 
-// Drag and drop functionality
-uploadPlaceholder.addEventListener('dragover', function(e) {
-    e.preventDefault();
-    this.classList.add('dragging');
-});
 
-uploadPlaceholder.addEventListener('dragleave', function(e) {
-    e.preventDefault();
-    this.classList.remove('dragging');
-});
+        imageUpload.addEventListener('change', function() {
+            console.log('Change event triggered');
+            const file = this.files[0];
+            if (file) {
+                console.log('File selected:', file.name, 'Type:', file.type);
+                const fileType = file.type;
+                
 
-uploadPlaceholder.addEventListener('drop', function(e) {
-    e.preventDefault();
-    this.classList.remove('dragging');
-    
-    const files = e.dataTransfer.files;
-    if (files.length) {
-        try {
-            // Use DataTransfer to set the file
-            const dataTransfer = new DataTransfer();
-            dataTransfer.items.add(files[0]);
-            imageUpload.files = dataTransfer.files;
-            
-            // Trigger change event manually
-            const event = new Event('change');
-            imageUpload.dispatchEvent(event);
-        } catch (error) {
-            console.error('Error handling dropped file:', error);
-            alert('Error processing dropped file. Please use the button to select a file.');
-        }
-    }
-});
-
-// Form submission - using manual validation instead of HTML required attribute
-document.getElementById('create-post-form').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    // Manual validation for required image
-    if (!imageUpload.files.length) {
-        alert('Please select an image for your post.');
-        // Highlight the upload area to indicate it needs attention
-        uploadPlaceholder.classList.add('border-danger');
-        setTimeout(() => {
-            uploadPlaceholder.classList.remove('border-danger');
-        }, 3000);
-        return;
-    }
-    
-    if (caption.value.length > maxCaptionLength) {
-        alert(`Caption cannot exceed ${maxCaptionLength} characters.`);
-        caption.focus();
-        return;
-    }
-    
-    const submitBtn = this.querySelector('button[type="submit"]');
-    const originalText = submitBtn.innerHTML;
-    submitBtn.disabled = true;
-    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Uploading image...';
-    
-    try {
-        const imageFormData = new FormData();
-        imageFormData.append('file_name', imageUpload.files[0]);
-        console.log('Uploading:', imageUpload.files[0]);
-        
-        const uploadResponse = await fetch('/upload-file', {
-            method: 'POST',
-            body: imageFormData
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    imagePreview.src = e.target.result;
+                    uploadPlaceholder.classList.add('d-none');
+                    imagePreviewContainer.classList.remove('d-none');
+                }
+                reader.readAsDataURL(file);
+            }
         });
-        
-        // Get raw response text for better debugging
-        const responseText = await uploadResponse.text();
-        console.log('Raw response:', responseText);
-        
-        // Parse response as JSON
-        let uploadJson;
-        try {
-            uploadJson = JSON.parse(responseText);
-            console.log('Parsed response:', uploadJson);
-        } catch (e) {
-            console.error('Error parsing JSON response:', e);
-            throw new Error('Server returned invalid response format');
-        }
-        
-        // Check for success - handle different response formats
-        const isSuccess = uploadJson.status === true || 
-                         (uploadJson.status_code && uploadJson.status_code < 400);
-        
-        // Determine filename from various response formats
-        const filename = uploadJson.filename || 
-                        (typeof uploadJson.content === 'string' ? uploadJson.content : null) ||
-                        imageUpload.files[0].name;
-        
-        if (uploadResponse.ok && (isSuccess || filename)) {
-            const postData = {
-                image_ref: filename,
-                caption: caption.value
-            };
+
+
+        document.getElementById('change-image').addEventListener('click', function() {
+            imageUpload.value = '';
+            uploadPlaceholder.classList.remove('d-none');
+            imagePreviewContainer.classList.add('d-none');
+        });
+
+        uploadPlaceholder.addEventListener('click', function() {
+            imageUpload.click();
+        });
+
+        caption.addEventListener('input', function() {
+            const length = this.value.length;
+            captionCounter.textContent = `${length}/${maxCaptionLength}`;
             
-            if (document.getElementById('location').value) {
-                postData.location = document.getElementById('location').value;
-            }
-            
-            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Creating post...';
-            
-            const postResponse = await fetch('/post', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(postData)
-            });
-            
-            let result;
-            try {
-                result = await postResponse.json();
-                console.log('Post creation result:', result);
-            } catch (e) {
-                console.error('Error parsing post response:', e);
-                throw new Error('Invalid response from post creation');
-            }
-            
-            if (result.status === true) {
-                window.location.href = '/profile';
+            if (length > maxCaptionLength) {
+                captionCounter.classList.add('text-danger');
             } else {
-                const errorMessage = result.message || 'Unknown error';
-                alert('Error creating post: ' + errorMessage);
+                captionCounter.classList.remove('text-danger');
+            }
+        });
+
+        uploadPlaceholder.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.classList.add('dragging');
+        });
+
+        uploadPlaceholder.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            this.classList.remove('dragging');
+        });
+
+        uploadPlaceholder.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.classList.remove('dragging');
+            
+            const files = e.dataTransfer.files;
+            if (files.length) {
+                try {
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(files[0]);
+                    imageUpload.files = dataTransfer.files;
+                    
+                    const event = new Event('change');
+                    imageUpload.dispatchEvent(event);
+                } catch (error) {
+                    console.error('Error handling dropped file:', error);
+                    alert('Error processing dropped file. Please use the button to select a file.');
+                }
+            }
+        });
+
+        document.getElementById('create-post-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (!imageUpload.files.length) {
+                alert('Please select an image for your post.');
+                uploadPlaceholder.classList.add('border-danger');
+                setTimeout(() => {
+                    uploadPlaceholder.classList.remove('border-danger');
+                }, 3000);
+                return;
+            }
+            
+            if (caption.value.length > maxCaptionLength) {
+                alert(`Caption cannot exceed ${maxCaptionLength} characters.`);
+                caption.focus();
+                return;
+            }
+            
+            const submitBtn = this.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Uploading image...';
+            
+            try {
+                const imageFormData = new FormData();
+                imageFormData.append('file_name', imageUpload.files[0]);
+                console.log('Uploading:', imageUpload.files[0]);
+                
+                const uploadResponse = await fetch('/upload-file', {
+                    method: 'POST',
+                    body: imageFormData
+                });
+                
+                const responseText = await uploadResponse.text();
+                console.log('Raw response:', responseText);
+                
+                let uploadJson;
+                try {
+                    uploadJson = JSON.parse(responseText);
+                    console.log('Parsed response:', uploadJson);
+                } catch (e) {
+                    console.error('Error parsing JSON response:', e);
+                    throw new Error('Server returned invalid response format');
+                }
+                
+                const isSuccess = uploadJson.status === true || 
+                                (uploadJson.status_code && uploadJson.status_code < 400);
+                
+                const filename = uploadJson.filename || 
+                                (typeof uploadJson.content === 'string' ? uploadJson.content : null) ||
+                                imageUpload.files[0].name;
+                
+                if (uploadResponse.ok && (isSuccess || filename)) {
+                    const postData = {
+                        image_ref: filename,
+                        caption: caption.value
+                    };
+                    
+                    if (document.getElementById('location').value) {
+                        postData.location = document.getElementById('location').value;
+                    }
+                    
+                    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Creating post...';
+                    
+                    const postResponse = await fetch('/post', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(postData)
+                    });
+                    
+                    let result;
+                    try {
+                        result = await postResponse.json();
+                        console.log('Post creation result:', result);
+                    } catch (e) {
+                        console.error('Error parsing post response:', e);
+                        throw new Error('Invalid response from post creation');
+                    }
+                    
+                    if (result.status === true) {
+                        window.location.href = '/profile/me';
+                    } else {
+                        const errorMessage = result.message || 'Unknown error';
+                        alert('Error creating post: ' + errorMessage);
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalText;
+                    }
+                } else {
+                    const errorMsg = (uploadJson && uploadJson.error) ? 
+                                uploadJson.error : 'Image upload failed';
+                    throw new Error(errorMsg);
+                }
+            } catch (error) {
+                console.error('Error details:', error);
+                alert('Error: ' + error.message);
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = originalText;
             }
-        } else {
-            const errorMsg = (uploadJson && uploadJson.error) ? 
-                          uploadJson.error : 'Image upload failed';
-            throw new Error(errorMsg);
-        }
-    } catch (error) {
-        console.error('Error details:', error);
-        alert('Error: ' + error.message);
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = originalText;
-    }
-});
-
-const style = document.createElement('style');
-style.textContent = `
-.border-danger {
-    border: 2px solid #dc3545 !important;
-    box-shadow: 0 0 5px rgba(220, 53, 69, 0.5);
-}
-`;
-document.head.appendChild(style);
-</script>
-{% endblock %}
+        });
+    </script>
+</body>
+</html>

@@ -18,6 +18,51 @@ firebase_request_adapter = requests.Request()
 
 class Service:
 
+
+    @staticmethod
+    def get_post(user:User,post_id:UUID):
+        try:
+            post_doc = firestore_db.collection("Post").document(str(post_id)).get()
+            if not post_doc.exists:
+                raise Exception("Post not found")
+            post = PostOutput(**post_doc.to_dict())
+            post.Id = str(post.Id)
+            post.UserId = str(post.UserId)
+            user_pic_query = firestore_db.collection('User').where('Id', '==', post.UserId).limit(1).get()
+            if user_pic_query:
+                post.User_Pic = user_pic_query[0].to_dict().get("Profile_Pic_Url", "")
+            else:
+                post.User_Pic = "default_user.jpeg"
+            if isinstance(post.Date, datetime.datetime):
+                post.Date = post.Date.isoformat()
+            comment_docs = firestore_db.collection('Comment').where('PostId', '==', str(post.Id)).stream()
+            comments = []
+            for doc in comment_docs:
+                comment_data = doc.to_dict()
+                comment = Comment(**comment_data)
+                if isinstance(comment.Date, datetime.datetime):
+                    comment.Date = comment.Date.isoformat()
+            comments.append(comment)
+            post.Comments = comments
+            owner_username = post.Username
+            owner_query = firestore_db.collection("User").where("Username", "==", owner_username).limit(1).stream()
+            owner_docs = list(owner_query)
+            if not owner_docs:
+                raise Exception("Post owner not found")
+            
+            owner_data = owner_docs[0].to_dict()
+            data = {
+                "post": post,
+                "profile_username": owner_username,
+                "profile_name": owner_data.get("Profile_Name", owner_username),
+                "is_own_post": user.Username == owner_username if user else False,
+            }
+        
+            return data
+        except Exception as e:
+            print(f"Error in get_post service: {str(e)}")
+            raise Exception(str(e))
+
     @staticmethod
     def get_all_posts(user:User,username):
         try:
@@ -43,7 +88,6 @@ class Service:
             profile_user_data = profile_user_docs[0].to_dict()
             is_following = False
             if user and hasattr(user, "Following"):
-                # Check if profile user's ID is in user's Following list
                 if any(item.get("Username") == username for item in user.Following):
                     is_following = True
             data = {
@@ -176,20 +220,20 @@ class Service:
                     following_data_dict = following_doc.to_dict()
                     
                     if following_data_dict:
-                        # Get the date when started following
+                       
                         following_date = following_item.get("Date", "")
                         
                         following_data.append({
                             "Username": following_data_dict.get("Username", ""),
                             "Bio": following_data_dict.get("Bio", ""),
                             "profile_pic_url": following_data_dict.get("Profile_Pic_Url", "default_user.jpeg"),
-                            "is_following": True,  # Always true since it's in the following list
+                            "is_following": True,  
                             "Profile_Name": following_data_dict.get("Profile_Name", ""),
-                            "following_since": following_date  # Include the date they started following
+                            "following_since": following_date  
                         })
                     else:
                         raise Exception("User not found")
-            
+            following_data.sort(key=lambda x: x.get("following_since", ""), reverse=True)
             return following_data
         except Exception as e:
             print("in service")
@@ -225,11 +269,11 @@ class Service:
                             "profile_pic_url": follower_data.get("Profile_Pic_Url", "default_user.jpeg"),
                             "is_following": is_following,
                             "Profile_Name": follower_data.get("Profile_Name", ""),
-                            "follower_since": follower_date  # Include the date they started following
+                            "follower_since": follower_date  
                         })
                     else:
                         raise Exception("User not found")
-            
+            followers_data.sort(key=lambda x: x.get("follower_since", ""), reverse=True)
             return followers_data
         except Exception as e:
             print("in service")
@@ -247,7 +291,7 @@ class Service:
             users_docs = query_ref.stream()
             users = []
             
-            # Extract usernames from Following list of dictionaries
+
             following_usernames = [item.get("Username") for item in user.Following] if user.Following else []
             
             for user_doc in users_docs:
@@ -256,7 +300,7 @@ class Service:
                 if username == user.Username:
                     continue
                 
-                # Check if username is in following_usernames
+
                 is_following = username in following_usernames
                 
                 users.append({
@@ -293,7 +337,7 @@ class Service:
             print(f"Error fetching users: {e}")
             return []
     @staticmethod
-    def download_file(filename:str):
+    async def download_file(filename:str):
         try:
             return Response(Service.downloadBlob(filename))
         except Exception as e:
@@ -327,8 +371,7 @@ class Service:
 
     @staticmethod
     async def upload_file(request: Request,file_name:UploadFile):
-        # if file_name.filename.filename == "":
-        #     raise Exception("file name is empty")
+
         try:
             content_type = file_name.content_type
             allowed_types = ["image/jpeg", "image/png"]
@@ -390,7 +433,7 @@ class Service:
             
             follow_user = User(**do_unfollow_user_exist.to_dict())
             
-            # Remove by username
+
             user.Following = [item for item in user.Following if item.get("Username") != unfollow_user_username]
             follow_user.Followers = [item for item in follow_user.Followers if item.get("Username") != user.Username]
 
@@ -546,7 +589,7 @@ class Service:
     def get_suggested_users(user: User) -> List[User]:
         try:
             current_username = user.Username
-            # Extract usernames from Following list of dictionaries
+
             following_usernames = [item.get("Username") for item in user.Following] if user.Following else []
 
             users_refs = firestore_db.collection("User").stream()
@@ -568,8 +611,7 @@ class Service:
                         user_obj.Profile_Pic_Url = 'default_user.jpeg'
                     else:
                         user_obj.Profile_Pic_Url = user_data["Profile_Pic_Url"]
-                    
-                    # Include Profile_Name if available
+
                     if user_data.get('Profile_Name'):
                         user_obj.Profile_Name = user_data["Profile_Name"]
                     

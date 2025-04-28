@@ -18,6 +18,17 @@ window.addEventListener("load", function() {
     updateUI(document.cookie);
     console.log("Firebase App Initialized");
 
+    auth.onAuthStateChanged((user) => {
+        if (user) {
+            user.getIdToken().then((token) => {
+                document.cookie = `token=${token}; path=/; SameSite=Strict`;
+                updateUI(document.cookie);
+            });
+        } else {
+            document.cookie = "token=; path=/; SameSite=Strict";
+            updateUI(document.cookie);
+        }
+    });
     
     document.getElementById("sign-up").addEventListener('click', function() {
         const email = document.getElementById("email").value.trim();
@@ -79,15 +90,17 @@ function updateUI(cookie) {
     const token = parseCookieToken(cookie);
     const isLoggedIn = token.length > 0;
     
+    // Remove the loading state
+    document.getElementById("login-box").classList.remove("auth-pending");
+    
+    // Rest of your existing function stays the same
     document.getElementById("login-box").hidden = isLoggedIn;
     document.getElementById("sign-out").hidden = !isLoggedIn;
-    
     
     const mainContent = document.getElementById("content");
     if (mainContent) {
         mainContent.classList.toggle("d-none", !isLoggedIn);
     }
-    
     
     if (!isLoggedIn) {
         const navItems = document.querySelectorAll('.navbar-nav .nav-item');

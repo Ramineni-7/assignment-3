@@ -39,6 +39,31 @@ def root(request:Request):
     try:
         new_user = Service.create_user_into_firestore(request)
         user = check_login_and_return_user(request)
+        print(user)
+        if user is None:
+            return templates.TemplateResponse(
+                "main.html",
+                {"request":request,"user":None}
+            )
+        data = Service.get_data_for_root(user)
+        return templates.TemplateResponse(
+            "main.html",
+            {"request":request,"user":user,"posts":data['posts'],"suggested_users":data["suggested_users"],"new_user":new_user}
+        )
+    except Exception as e:
+        print(str(e))
+        return templates.TemplateResponse(
+            "main.html",
+            {"request":request,"user":None}
+        )
+    
+
+@app.get("/login", response_class=HTMLResponse)
+def root(request:Request):
+    try:
+        new_user = Service.create_user_into_firestore(request)
+        user = check_login_and_return_user(request)
+        print(user)
         if user is None:
             return templates.TemplateResponse(
                 "main.html",
@@ -56,6 +81,7 @@ def root(request:Request):
             {"request":request,"user":None}
         )
 
+
 @app.post("/follow/{follow_user_username}",response_class=JSONResponse)
 def follow_user(request:Request,follow_user_username:str):
     try:
@@ -69,6 +95,7 @@ def follow_user(request:Request,follow_user_username:str):
         return { "success": True, "message": "User followed successfully" }
     except Exception as e:
         return { "success": False, "message": str(e) }
+
 
 
 @app.delete("/follow/{unfollow_user_username}",response_class=JSONResponse)
@@ -175,13 +202,13 @@ def profile(request:Request,username:str):
 
 
 @app.get("/images/{file_name}",response_class=Response)
-def download_file(request:Request,file_name:str):
+async def download_file(request:Request,file_name:str):
     try:
         print(file_name)
         if file_name.startswith("file_name="):
             actual_filename = file_name[10:]
-            return Service.download_file(actual_filename)
-        return Service.download_file(file_name)
+            return await Service.download_file(actual_filename)
+        return await Service.download_file(file_name)
     except Exception as e:
         print(e)
         return 
@@ -331,3 +358,31 @@ def get_comments(request:Request,post_id):
         return {"comments":comments}
     except Exception as e:
         return {"status": False, "message": f"Failed to fetch comment: {str(e)}"}
+    
+
+app.get('/post/{post_id}',response_class=HTMLResponse)
+def get_post(request:Request,post_id):
+    try:
+        print('hiiiitittititi')
+        user = check_login_and_return_user(request)
+        if user is None:
+            return templates.TemplateResponse(
+                "main.html",
+                {"request":request,"user":None}
+            )
+        data = Service.get_post(user,post_id)
+        return templates.TemplateResponse(
+            "post-detail.html", {
+                 "request":request,
+                 "Id": data['Id'],
+                 "Username":data["Username"] ,
+                 "User_Pic":data["User_Pic"],
+                 "Image_ref":data["Image_ref"],
+                 "Caption":data["Caption"],
+                 "Date":data["Date"],
+                 "Likes":0,
+                 "user_has_liked": False,
+                 "Comments":data['Comments']
+            })
+    except Exception as e:
+        print(e)
