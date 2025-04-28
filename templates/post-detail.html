@@ -252,20 +252,16 @@
 
     <div id="content" class="container content-container">
         <div class="post-container">
-            <!-- Post Header with Profile Pic and Username -->
             <div class="post-header">
                 <img src="/images/file_name={{ post.User_Pic | urlencode }}" alt="{{ post.Username }}" class="profile-pic">
                 <a href="/profile/{{ post.Username }}" class="post-username text-decoration-none text-dark">{{ post.Username }}</a>
             </div>
             
-            <!-- Post Image -->
             <div class="post-image-container">
                 <img src="/images/file_name={{ post.Image_ref | urlencode }}" class="post-image" alt="Post image">
             </div>
             
-            <!-- Post Body - Actions, Caption, Comments -->
             <div class="card-body">
-                <!-- Action Icons -->
                 <div class="action-icons mb-2">
                     <i class="bi bi-heart{% if post.user_has_liked %}-fill text-danger{% endif %}"></i>
                     <i class="bi bi-chat"></i>
@@ -273,15 +269,12 @@
                     <i class="bi bi-bookmark float-end"></i>
                 </div>
                 
-                <!-- Like Count -->
                 <div class="like-count">{{ post.Likes if post.Likes else 0 }} likes</div>
                 
-                <!-- Caption -->
                 <div class="post-caption">
                     <span class="fw-bold">{{ post.Username }}</span> {{ post.Caption }}
                 </div>
                 
-                <!-- Comments Section -->
                 <div class="mt-2">
                     <a href="#" class="text-muted text-decoration-none small" data-bs-toggle="collapse" data-bs-target="#comments-{{ post.Id }}">
                         View all {{ post.Comments|length if post.Comments else 0 }} comments
@@ -311,12 +304,10 @@
                         </div>
                     </div>
                     
-                    <!-- Timestamp -->
                     <div class="timestamp" data-timestamp="{{ post.Date }}">{{ post.Date }}</div>
                 </div>
             </div>
             
-            <!-- Comment Form -->
             <form class="post-form" onsubmit="addComment(event, '{{ post.Id }}'); return false;">
                 <input type="text" class="post-input" placeholder="Add a comment..." required>
                 <button class="post-btn" type="submit">Post</button>
@@ -328,7 +319,6 @@
     <script type="module" src="/static/firebase-login.js"></script>
     
     <script>
-        // Format timestamps function
         function formatTimestamps() {
             const timestampElements = document.querySelectorAll('.timestamp');
             
@@ -365,7 +355,6 @@
             });
         }
 
-        // Expand Comments Function (from main.html)
         function expandComments(postId) {
             console.log("Expand comments for post:", postId);
             
@@ -385,10 +374,8 @@
                 return;
             }
             
-            // Add loading indicator
             commentContainer.innerHTML = '<div class="text-center"><div class="spinner-border spinner-border-sm" role="status"></div> Loading comments...</div>';
             
-            // Check third problem: fetching comments
             console.log("Fetching from:", `/posts/${postId}/comments`);
             
             fetch(`/posts/${postId}/comments`)
@@ -402,7 +389,6 @@
                     if (data.comments && data.comments.length > 0) {
                         let commentsHtml = '';
                         
-                        // Sort comments by timestamp (newest first)
                         if (data.comments.some(c => c.timestamp)) {
                             data.comments.sort((a, b) => {
                                 if (!a.timestamp) return 1;
@@ -431,7 +417,6 @@
                 });
         }
 
-        // Add Comment Function
         function addComment(event, postId) {
             event.preventDefault();
 
@@ -442,7 +427,6 @@
 
             if (!commentText) return;
 
-            // Set button to "Posting..."
             button.disabled = true;
             button.innerText = "Posting...";
 
@@ -457,41 +441,33 @@
             })
             .then(response => response.json())
             .then(data => {
-                // Check if response uses 'success' or 'status' property
                 const isSuccess = data.success || data.status;
                 
                 if (isSuccess) {
                     console.log("Comment added successfully:", data.comment);
                     
-                    // Clear the input field immediately
                     input.value = ''; 
 
-                    // Get the comment section container
                     const commentSection = document.querySelector(`#comments-${postId} .comment-section`);
                     
                     if (commentSection) {
-                        // Create new comment element
                         const newComment = document.createElement('div');
                         newComment.className = 'mb-2';
                         newComment.innerHTML = `<span class="fw-bold">${data.comment.username}</span> ${data.comment.text}`;
                         
-                        // Insert at the beginning of comment section (newest first)
                         if (commentSection.firstChild) {
                             commentSection.insertBefore(newComment, commentSection.firstChild);
                         } else {
                             commentSection.appendChild(newComment);
                         }
                         
-                        // Replace "No comments yet" message if it exists
                         const noCommentsMsg = commentSection.querySelector('p.text-muted.small');
                         if (noCommentsMsg) {
                             noCommentsMsg.remove();
                         }
                         
-                        // Update comment count if needed
                         const viewCommentsLink = document.querySelector(`a[data-bs-target="#comments-${postId}"]`);
                         if (viewCommentsLink) {
-                            // Extract current count from text like "View all X comments"
                             const currentText = viewCommentsLink.textContent;
                             const countMatch = currentText.match(/\d+/);
                             if (countMatch) {
@@ -500,7 +476,6 @@
                             }
                         }
                         
-                        // Make sure the comment section is visible
                         const collapse = bootstrap.Collapse.getInstance(commentSection);
                         if (collapse && !commentSection.classList.contains('show')) {
                             collapse.show();
@@ -516,13 +491,11 @@
                 alert('Failed to add comment. Please try again.');
             })
             .finally(() => {
-                // Reset button back to "Post"
                 button.disabled = false;
                 button.innerText = "Post";
             });
         }
 
-        // Like button functionality
         document.addEventListener('DOMContentLoaded', function() {
             formatTimestamps();
             setInterval(formatTimestamps, 60000);
