@@ -1,592 +1,1069 @@
-{% extends "home.html" %}
-
-{% block content %}
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<div class="row">
-    <div class="col-lg-8">
-        {% if posts %}
-            {% for post in posts %}
-            <div class="card mb-4 post-card" data-post-id="{{ post.id }}">
-                <div class="card-header">
-                    <div class="d-flex align-items-center">
-                        <img src="/images/file_name={{ post.User_Pic | urlencode }}" alt="{{ post.username }}" class="profile-pic me-3">
-                        <div>
-                            <a href="/profile/{{ post.Username }}" class="text-decoration-none text-dark fw-bold">{{ post.Username }}</a>
-                            <div class="timestamp" data-timestamp="{{ post.Date }}">{{ post.Date }}</div>
-
-
-                        </div>
-                    </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InstaClone</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary-color: #405DE6;
+            --primary-gradient: linear-gradient(45deg, #405DE6, #5851DB, #833AB4, #C13584, #E1306C, #FD1D1D);
+            --secondary-color: #E1306C;
+            --bg-color: #FAFAFA;
+            --post-bg: #FFFFFF;
+            --text-dark: #262626;
+            --text-light: #8E8E8E;
+            --border-color: #DBDBDB;
+        }
+        
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        
+        .navbar {
+            background-color: var(--post-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 10px 0;
+        }
+        
+        .navbar-brand {
+            font-family: 'Instagram Sans', cursive;
+            font-size: 2rem;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: bold;
+        }
+        
+        .content-container {
+            margin-top: 80px;
+            padding-bottom: 40px;
+        }
+        
+        .card {
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        
+        .card-header {
+            background-color: var(--post-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 12px 16px;
+        }
+        
+        .card-img-top {
+            width: 100%;
+            max-height: 600px;
+            object-fit: cover;
+        }
+        
+        .btn-primary {
+            background: var(--primary-gradient);
+            border: none;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        
+        .btn-outline-primary {
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-outline-primary:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .profile-pic {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--primary-color);
+        }
+        
+        .profile-pic-lg {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--secondary-color);
+        }
+        
+        .comment-section {
+            max-height: 250px;
+            overflow-y: auto;
+        }
+        
+        .story-circle {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            padding: 3px;
+            background: var(--primary-gradient);
+            margin: 0 8px;
+        }
+        
+        .story-circle img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 2px solid white;
+            object-fit: cover;
+        }
+        
+        .story-username {
+            font-size: 12px;
+            text-align: center;
+            margin-top: 5px;
+            color: var(--text-dark);
+            max-width: 70px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .action-icons {
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        
+        .action-icons i {
+            margin-right: 15px;
+            transition: all 0.2s ease;
+        }
+        
+        .action-icons i:hover {
+            color: var(--secondary-color);
+        }
+        
+        .nav-icon {
+            font-size: 1.5rem;
+            margin: 0 10px;
+            color: var(--text-dark);
+        }
+        
+        .like-count {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .post-caption {
+            margin-bottom: 10px;
+        }
+        
+        .timestamp {
+            font-size: 12px;
+            color: var(--text-light);
+            text-transform: uppercase;
+            margin-top: 5px;
+        }
+        
+        .login-card {
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            border-radius: 10px;
+        }
+        
+        .login-logo {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+        
+        .post-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+        }
+        
+        .post-grid-item {
+            aspect-ratio: 1/1;
+            overflow: hidden;
+            position: relative;
+            border-radius: 3px;
+        }
+        
+        .post-grid-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+        
+        .post-grid-item:hover img {
+            transform: scale(1.05);
+        }
+        
+        .post-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .post-grid-item:hover .post-overlay {
+            opacity: 1;
+        }
+        
+        .post-overlay-stats {
+            color: white;
+            display: flex;
+            gap: 20px;
+        }
+        
+        .post-overlay-stat {
+            display: flex;
+            align-items: center;
+        }
+        
+        .post-overlay-stat i {
+            margin-right: 5px;
+        }
+        
+        @media (max-width: 768px) {
+            .post-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .story-circle {
+                width: 60px;
+                height: 60px;
+            }
+        }
+        
+        .gradient-border {
+            position: relative;
+        }
+        
+        .gradient-border::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            width: calc(100% + 4px);
+            height: calc(100% + 4px);
+            background: var(--primary-gradient);
+            border-radius: 10px;
+            z-index: -1;
+            animation: rotate 3s linear infinite;
+        }
+        
+        @keyframes rotate {
+            0% {
+                filter: hue-rotate(0deg);
+            }
+            100% {
+                filter: hue-rotate(360deg);
+            }
+        }
+        
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary-color);
+        }
+        .auth-pending {
+        visibility: hidden;
+    }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="/">InstaClone</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mx-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/"><i class="bi bi-house-fill nav-icon"></i></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/search"><i class="bi bi-search nav-icon"></i></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/post"><i class="bi bi-plus-square nav-icon"></i></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/profile/me"><i class="bi bi-person-circle nav-icon"></i></a>
+                    </li>
+                </ul>
+                <div class="d-flex">
+                    <button id="sign-out" class="btn btn-outline-danger" hidden>Sign Out</button>
                 </div>
-                
-                <img src="/images/file_name={{ post.Image_ref | urlencode }}" class="card-img-top" alt="Post image">
+            </div>
+        </div>
+    </nav>
 
-                
-                <div class="card-body">
-                    <div class="action-icons mb-2">
-                        <i class="bi bi-heart"></i>
-                        <i class="bi bi-chat"></i>
-                        <i class="bi bi-send"></i>
-                        <i class="bi bi-bookmark float-end"></i>
-                    </div>
-                    
-                    <div class="like-count">{{ post.Likes if post.Likes else 0 }} likes</div>
-                    
-                    <div class="post-caption">
-                        <span class="fw-bold">{{ post.Username }}</span> {{ post.Caption }}
-                    </div>
-                    
-                    <div class="mt-2">
-                        <a href="#" class="text-muted text-decoration-none small" data-bs-toggle="collapse" data-bs-target="#comments-{{ post.id }}">
-                            View all {{ post.Comments|length }} comments
-                        </a>
-                        
-                        <div class="collapse mt-2" id="comments-{{ post.id }}">
-                            <div class="comment-section">
-                                {% if post.Comments %}
-                                    {% for comment in post.Comments[:5] %}
-                                    <div class="mb-2">
-                                        <span class="fw-bold">{{ comment.username }}</span>
-                                        {{ comment.text }}
-                                    </div>
-                                    {% endfor %}
-                                    
-                                    {% if post.Comments|length > 5 %}
-                                    <button class="btn btn-sm btn-link p-0" onclick="expandComments('{{ post.id }}')">
-                                        View all {{ post.Comments|length }} comments
-                                    </button>
-                                    {% endif %}
-                                {% else %}
-                                    <p class="text-muted small">No comments yet. Be the first to comment!</p>
-                                {% endif %}
+    <div class="container content-container">
+        <!-- Login Box - Will be hidden once logged in -->
+        <div id="login-box" class="row justify-content-center auth-pending">
+            <div class="col-md-6 col-lg-4">
+                <div class="card login-card gradient-border">
+                    <div class="card-body text-center">
+                        <h1 class="login-logo navbar-brand">InstaClone</h1>
+                        <p class="text-muted mb-4">Sign in to see photos and videos from your friends.</p>
+                        <form>
+                            <div class="mb-3">
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                                    <input type="email" class="form-control" id="email" placeholder="Email" required>
+                                </div>
                             </div>
-                        </div>
-                        
-                        <form class="mt-3" onsubmit="addComment('{{ post.id }}'); return false;">
-                            <div class="input-group">
-                                <input type="text" class="form-control form-control-sm" placeholder="Add a comment..." maxlength="200" required>
-                                <button class="btn btn-outline-primary btn-sm" type="submit">Post</button>
+                            <div class="mb-3">
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                                    <input type="password" class="form-control" id="password" placeholder="Password" required>
+                                </div>
+                            </div>
+                            <div class="d-grid gap-2">
+                                <button type="button" id="login" class="btn btn-primary">Log In</button>
+                                <div class="text-center my-3">
+                                    <span class="text-muted">OR</span>
+                                </div>
+                                <button type="button" id="sign-up" class="btn btn-outline-primary">Sign Up</button>
                             </div>
                         </form>
                     </div>
                 </div>
             </div>
-            {% endfor %}
-        {% else %}
-            <div class="card">
-                <div class="card-body text-center py-5">
-                    <i class="bi bi-camera" style="font-size: 4rem; color: var(--text-light);"></i>
-                    <h5 class="mt-3">No Posts Yet</h5>
-                    <p class="text-muted">Start following users or create your own posts!</p>
-                    <a href="/post" class="btn btn-primary mt-2">Create Your First Post</a>
-                </div>
-            </div>
-        {% endif %}
-    </div>
-    
-    <div class="col-lg-4 d-none d-lg-block">
-        <div class="card mb-4">
-            <div class="card-body">
-                <div class="d-flex align-items-center mb-3">
-                    <img src="/images/file_name={{ user.Profile_Pic_Url | urlencode }}" class="profile-pic-lg me-3" alt="Profile picture">
-                    <div>
-                        <h5 class="mb-1">{{user.Username }}</h5>
-                        <div class="text-muted">{{ bio|truncate(50) if bio else 'No bio yet' }}</div>
+        </div>
+        
+        <!-- Main Content Area - Will be shown once logged in -->
+        <div id="content" class="">
+            <!-- Home Feed -->
+            <div class="row">
+                <div class="col-lg-8">
+                    <div id="posts-container">
+                        <!-- Posts will be loaded here dynamically -->
+                        {% if posts %}
+                            {% for post in posts %}
+                            <div class="card mb-4 post-card" data-post-id="{{ post.Id }}">
+                                <div class="card-header">
+                                    <div class="d-flex align-items-center">
+                                        <img src="/images/file_name={{ post.User_Pic | urlencode }}" alt="{{ post.username }}" class="profile-pic me-3">
+                                        <div>
+                                            <a href="/profile/{{ post.Username }}" class="text-decoration-none text-dark fw-bold">{{ post.Username }}</a>
+                                            <div class="timestamp" data-timestamp="{{ post.Date }}">{{ post.Date }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <img src="/images/file_name={{ post.Image_ref | urlencode }}" class="card-img-top" alt="Post image">
+                                
+                                <div class="card-body">
+                                    <div class="action-icons mb-2">
+                                        <i class="bi bi-heart"></i>
+                                        <i class="bi bi-chat"></i>
+                                        <i class="bi bi-send"></i>
+                                        <i class="bi bi-bookmark float-end"></i>
+                                    </div>
+                                    
+                                    <div class="like-count">{{ post.Likes if post.Likes else 0 }} likes</div>
+                                    
+                                    <div class="post-caption">
+                                        <span class="fw-bold">{{ post.Username }}</span> {{ post.Caption }}
+                                    </div>
+                                    
+                                    <div class="mt-2">
+                                        <a href="#" class="text-muted text-decoration-none small" data-bs-toggle="collapse" data-bs-target="#comments-{{ post.Id }}">
+                                            View all {{ post.Comments|length }} comments
+                                        </a>
+                                        
+                                        <div class="collapse mt-2" id="comments-{{ post.Id }}">
+                                            <div class="comment-section">
+                                                {% if post.Comments %}
+                                                {% set sorted_comments = post.Comments|sort(attribute='Date', reverse=True) %}
+                                                {% for comment in sorted_comments %}
+                                                    {% if loop.index <= 5 %}
+                                                    <div class="mb-2">
+                                                        <span class="fw-bold">{{ comment.Username }}</span>
+                                                        {{ comment.Text }}
+                                                    </div>
+                                                    {% endif %}
+                                                {% endfor %}
+                                                
+                                                {% if post.Comments|length > 5 %}
+                                                <button class="btn btn-sm btn-link p-0" onclick="expandComments('{{ post.Id }}')">
+                                                    View all {{ post.Comments|length }} comments
+                                                </button>
+                                                {% endif %}
+                                                {% else %}
+                                                <p class="text-muted small">No comments yet. Be the first to comment!</p>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        
+                                        <form class="mt-3" onsubmit="addComment(event, '{{ post.Id }}'); return false;">
+                                            <div class="input-group">
+                                                <input type="text" class="form-control form-control-sm" placeholder="Add a comment..." required>
+                                                <button class="btn btn-outline-primary btn-sm" type="submit">Post</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        {% else %}
+                            <div class="card">
+                                <div class="card-body text-center py-5">
+                                    <i class="bi bi-camera" style="font-size: 4rem; color: var(--text-light);"></i>
+                                    <h5 class="mt-3">No Posts Yet</h5>
+                                    <p class="text-muted">Start following users or create your own posts!</p>
+                                    <a href="/post" class="btn btn-primary mt-2">Create Your First Post</a>
+                                </div>
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
                 
-                <div class="row text-center mb-3">
-                    <div class="col">
-                        <h6>{{ posts_count }}</h6>
-                        <div class="text-muted small">Posts</div>
-                    </div>
-                    <div class="col">
-                        <a href="/followers" class="text-decoration-none text-dark">
-                            <h6>{{ user.Followers | length }}</h6>
-                            <div class="text-muted small">Followers</div>
-                        </a>
-                    </div>
-                    <div class="col">
-                        <a href="/following" class="text-decoration-none text-dark">
-                            <h6>{{ user.Following | length }}</h6>
-                            <div class="text-muted small">Following</div>
-                        </a>
-                    </div>
-                </div>
-                <a href="/post" class="btn btn-primary w-100">Create Post</a>
-            </div>
-        </div>
-        <div class="card">
-            <div class="card-header">
-                <div class="d-flex justify-content-between align-items-center">
-                    <span class="fw-bold">Suggestions For You</span>
-                    <a href="/search" class="text-decoration-none">See All</a>
-                </div>
-            </div>
-            <div class="card-body p-0">
-                {% if suggested_users %}
-                    <ul class="list-group list-group-flush" id="suggested-users-list">
-                    {% for user in suggested_users[:5] %}
-                        <li class="list-group-item">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div class="d-flex align-items-center">
-                                    <img src="/images/file_name={{ user.Profile_Pic_Url | urlencode }}" class="profile-pic me-2" alt="Profile picture">
-                                    <div>
-                                        <a href="/profile/{{ user.Username }}" class="text-decoration-none text-dark fw-bold">{{ user.Username }}</a>
-                                        <div class="text-muted small">{{ 'Popular' if loop.index == 1 else 'Suggested for you' }}</div>
-                                    </div>
+                <div class="col-lg-4 d-none d-lg-block">
+                    <!-- User Profile Card -->
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <img src="/images/file_name={{ user.Profile_Pic_Url | urlencode }}" class="profile-pic-lg me-3" alt="Profile picture">
+                                <div>
+                                    <h5 class="mb-1">{{user.Username }}</h5>
+                                    <div class="text-muted">{{ bio|truncate(50) if bio else 'No bio yet' }}</div>
                                 </div>
-                                <button class="btn btn-sm btn-outline-primary rounded-pill follow-button" 
-                                        data-username="{{ user.Username }}"
-                                        onclick="followUser(this, '{{ user.Username }}')">
-                                    Follow
-                                </button>
                             </div>
-                        </li>
-                    {% endfor %}
-                    </ul>
-                {% else %}
-                    <div class="p-3 text-center text-muted small">
-                        No suggestions available at the moment.
+                            
+                            <div class="row text-center mb-3">
+                                <div class="col">
+                                    <h6>{{ posts_count }}</h6>
+                                    <div class="text-muted small">Posts</div>
+                                </div>
+                                <div class="col">
+                                    <a href="/followers" class="text-decoration-none text-dark">
+                                        <h6>{{ user.Followers | length }}</h6>
+                                        <div class="text-muted small">Followers</div>
+                                    </a>
+                                </div>
+                                <div class="col">
+                                    <a href="/following" class="text-decoration-none text-dark">
+                                        <h6>{{ user.Following | length }}</h6>
+                                        <div class="text-muted small">Following</div>
+                                    </a>
+                                </div>
+                            </div>
+                            <a href="/post" class="btn btn-primary w-100">Create Post</a>
+                        </div>
                     </div>
-                {% endif %}
-            </div>
-        </div>
-    </div>
-</div>
-
-
-
-<!-- New User Modal -->
-{% if new_user %}
-<div class="modal fade" id="newUserModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="newUserModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="newUserModalLabel">Complete Your Profile</h5>
-            </div>
-            <div class="modal-body">
-                <form id="user-profile-form" enctype="multipart/form-data">
-                    <div class="text-center mb-4">
-                        <div class="position-relative d-inline-block">
-                            <div id="profile-pic-placeholder" class="profile-pic-lg mx-auto mb-2" 
-                                 style="width: 120px; height: 120px; border-radius: 50%; background-color: #f8f9fa; 
-                                        display: flex; align-items: center; justify-content: center; cursor: pointer;">
-                                <i class="bi bi-person" style="font-size: 3rem; color: var(--text-light);"></i>
-                            </div>
-                            <img id="profile-pic-preview" class="profile-pic-lg mx-auto mb-2 d-none" 
-                                 style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover;" alt="Profile picture">
-                            <div class="position-absolute bottom-0 end-0">
-                                <label for="profile-pic-upload" class="btn btn-sm btn-primary rounded-circle">
-                                    <i class="bi bi-camera"></i>
-                                </label>
-                                <input type="file" class="d-none" id="profile-pic-upload" name="profile_pic" accept="image/png,image/jpeg">
+                    
+                    <!-- Suggestions Card -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="fw-bold">Suggestions For You</span>
+                                <a href="/search" class="text-decoration-none">See All</a>
                             </div>
                         </div>
-                        <small class="text-muted d-block">Upload a profile picture (optional)</small>
+                        <div class="card-body p-0">
+                            {% if suggested_users %}
+                                <ul class="list-group list-group-flush" id="suggested-users-list">
+                                {% for user in suggested_users[:5] %}
+                                    <li class="list-group-item">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div class="d-flex align-items-center">
+                                                <img src="/images/file_name={{ user.Profile_Pic_Url | urlencode }}" class="profile-pic me-2" alt="Profile picture">
+                                                <div>
+                                                    <a href="/profile/{{ user.Username }}" class="text-decoration-none text-dark fw-bold">{{ user.Username }}</a>
+                                                    <div class="text-muted small">{{ 'Popular' if loop.index == 1 else 'Suggested for you' }}</div>
+                                                </div>
+                                            </div>
+                                            <button class="btn btn-sm btn-outline-primary rounded-pill follow-button" 
+                                                    data-username="{{ user.Username }}"
+                                                    onclick="followUser(this, '{{ user.Username }}')">
+                                                Follow
+                                            </button>
+                                        </div>
+                                    </li>
+                                {% endfor %}
+                                </ul>
+                            {% else %}
+                                <div class="p-3 text-center text-muted small">
+                                    No suggestions available at the moment.
+                                </div>
+                            {% endif %}
+                        </div>
                     </div>
-
-                    <div class="mb-3">
-                        <label for="username" class="form-label">Username <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="username" name="username" required>
-                        <div class="invalid-feedback" id="username-error"></div>
-                        <small class="form-text text-muted">This will be your public username and cannot be changed later.</small>
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="bio" class="form-label">Bio</label>
-                        <textarea class="form-control" id="bio" name="bio" rows="3" placeholder="Tell us about yourself..."></textarea>
-                        <div class="form-text text-end" id="bio-counter">0/150</div>
-                    </div>
-
-                    <div class="alert alert-danger d-none" id="update-error"></div>
-
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-primary" id="save-profile-btn">Save Profile</button>
-                    </div>
-                </form>
+                </div>
             </div>
         </div>
     </div>
-</div>
 
-<script>
-    // Only initialize modal if new_user is true
+    <!-- New User Modal -->
     {% if new_user %}
-    // Elements
-    const profilePicUpload = document.getElementById('profile-pic-upload');
-    const profilePicPlaceholder = document.getElementById('profile-pic-placeholder');
-    const profilePicPreview = document.getElementById('profile-pic-preview');
-    const bioInput = document.getElementById('bio');
-    const bioCounter = document.getElementById('bio-counter');
-    const maxBioLength = 150;
-    const userProfileForm = document.getElementById('user-profile-form');
-    const usernameInput = document.getElementById('username');
-    const usernameError = document.getElementById('username-error');
-    const updateError = document.getElementById('update-error');
-    const saveProfileBtn = document.getElementById('save-profile-btn');
+    <div class="modal fade" id="newUserModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="newUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="newUserModalLabel">Complete Your Profile</h5>
+                </div>
+                <div class="modal-body">
+                    <form id="user-profile-form" enctype="multipart/form-data">
+                        <div class="text-center mb-4">
+                            <div class="position-relative d-inline-block">
+                                <div id="profile-pic-placeholder" class="profile-pic-lg mx-auto mb-2" 
+                                     style="width: 120px; height: 120px; border-radius: 50%; background-color: #f8f9fa; 
+                                            display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                                    <i class="bi bi-person" style="font-size: 3rem; color: var(--text-light);"></i>
+                                </div>
+                                <img id="profile-pic-preview" class="profile-pic-lg mx-auto mb-2 d-none" 
+                                     style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover;" alt="Profile picture">
+                                <div class="position-absolute bottom-0 end-0">
+                                    <label for="profile-pic-upload" class="btn btn-sm btn-primary rounded-circle">
+                                        <i class="bi bi-camera"></i>
+                                    </label>
+                                    <input type="file" class="d-none" id="profile-pic-upload" name="profile_pic" accept="image/png,image/jpeg">
+                                </div>
+                            </div>
+                            <small class="text-muted d-block">Upload a profile picture (optional)</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="username" name="username" required>
+                            <div class="invalid-feedback" id="username-error"></div>
+                            <small class="form-text text-muted">This will be your public username and cannot be changed later.</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="profile_name" class="form-label">Profile Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="profile_name" name="profile_name" required>
+                            <small class="form-text text-muted">This is your display name that will be shown to others.</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="bio" class="form-label">Bio</label>
+                            <textarea class="form-control" id="bio" name="bio" rows="3" placeholder="Tell us about yourself..."></textarea>
+                            <div class="form-text text-end" id="bio-counter">0/150</div>
+                        </div>
+
+                        <div class="alert alert-danger d-none" id="update-error"></div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary" id="save-profile-btn">Save Profile</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="/static/firebase-login.js"></script>
     
-    // Show modal on page load
-    const newUserModal = new bootstrap.Modal(document.getElementById('newUserModal'));
-    document.addEventListener('DOMContentLoaded', function() {
-        newUserModal.show();
-    });
-    
-    // Profile picture upload
-    profilePicUpload.addEventListener('change', function() {
-        const file = this.files[0];
-        if (file) {
-            // Validate file type
-            const fileType = file.type;
-            if (fileType !== 'image/png' && fileType !== 'image/jpeg') {
-                alert('Please upload PNG or JPG images only.');
-                this.value = '';
+    <script>
+        // New User Modal Script
+        {% if new_user %}
+        // Elements
+        const profilePicUpload = document.getElementById('profile-pic-upload');
+        const profilePicPlaceholder = document.getElementById('profile-pic-placeholder');
+        const profilePicPreview = document.getElementById('profile-pic-preview');
+        const bioInput = document.getElementById('bio');
+        const bioCounter = document.getElementById('bio-counter');
+        const maxBioLength = 150;
+        const userProfileForm = document.getElementById('user-profile-form');
+        const usernameInput = document.getElementById('username');
+        const usernameError = document.getElementById('username-error');
+        const updateError = document.getElementById('update-error');
+        const saveProfileBtn = document.getElementById('save-profile-btn');
+        
+        // Show modal on page load
+        const newUserModal = new bootstrap.Modal(document.getElementById('newUserModal'));
+        document.addEventListener('DOMContentLoaded', function() {
+            newUserModal.show();
+        });
+        
+        // Profile picture upload
+        profilePicUpload.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                // Validate file type
+                const fileType = file.type;
+                if (fileType !== 'image/png' && fileType !== 'image/jpeg') {
+                    alert('Please upload PNG or JPG images only.');
+                    this.value = '';
+                    return;
+                }
+                
+                // Show preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    profilePicPreview.src = e.target.result;
+                    profilePicPlaceholder.classList.add('d-none');
+                    profilePicPreview.classList.remove('d-none');
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+        
+        // Click on placeholder to trigger file input
+        profilePicPlaceholder.addEventListener('click', function() {
+            profilePicUpload.click();
+        });
+        
+        // Bio character counter
+        bioInput.addEventListener('input', function() {
+            const length = this.value.length;
+            bioCounter.textContent = `${length}/${maxBioLength}`;
+            
+            if (length > maxBioLength) {
+                bioCounter.classList.add('text-danger');
+            } else {
+                bioCounter.classList.remove('text-danger');
+            }
+        });
+        
+        // Form submission
+        userProfileForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Reset errors
+            usernameError.textContent = '';
+            usernameInput.classList.remove('is-invalid');
+            updateError.classList.add('d-none');
+            
+            // Basic validation
+            if (!usernameInput.value.trim()) {
+                usernameInput.classList.add('is-invalid');
+                usernameError.textContent = 'Username is required';
                 return;
             }
             
-            // Show preview
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                profilePicPreview.src = e.target.result;
-                profilePicPlaceholder.classList.add('d-none');
-                profilePicPreview.classList.remove('d-none');
+            if (bioInput.value.length > maxBioLength) {
+                bioCounter.classList.add('text-danger');
+                return;
             }
-            reader.readAsDataURL(file);
-        }
-    });
-    
-    // Click on placeholder to trigger file input
-    profilePicPlaceholder.addEventListener('click', function() {
-        profilePicUpload.click();
-    });
-    
-    // Bio character counter
-    bioInput.addEventListener('input', function() {
-        const length = this.value.length;
-        bioCounter.textContent = `${length}/${maxBioLength}`;
-        
-        if (length > maxBioLength) {
-            bioCounter.classList.add('text-danger');
-        } else {
-            bioCounter.classList.remove('text-danger');
-        }
-    });
-    
-    // Form submission
-    userProfileForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        // Reset errors
-        usernameError.textContent = '';
-        usernameInput.classList.remove('is-invalid');
-        updateError.classList.add('d-none');
-        
-        // Basic validation
-        if (!usernameInput.value.trim()) {
-            usernameInput.classList.add('is-invalid');
-            usernameError.textContent = 'Username is required';
-            return;
-        }
-        
-        if (bioInput.value.length > maxBioLength) {
-            bioCounter.classList.add('text-danger');
-            return;
-        }
-        
-        // Disable button and show loading state
-        saveProfileBtn.disabled = true;
-        saveProfileBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
-        
-        try {
-            // Step 1: Upload profile picture if selected
-            let profilePicFilename = null;
             
-            if (profilePicUpload.files.length > 0) {
-                const imageFormData = new FormData();
-                imageFormData.append('file_name', profilePicUpload.files[0]);
+            // Disable button and show loading state
+            saveProfileBtn.disabled = true;
+            saveProfileBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...';
+            
+            try {
+                // Step 1: Upload profile picture if selected
+                let profilePicFilename = null;
                 
-                const uploadResponse = await fetch('/upload-file', {
+                if (profilePicUpload.files.length > 0) {
+                    const imageFormData = new FormData();
+                    imageFormData.append('file_name', profilePicUpload.files[0]);
+                    
+                    const uploadResponse = await fetch('/upload-file', {
+                        method: 'POST',
+                        body: imageFormData
+                    });
+                    
+                    const responseText = await uploadResponse.text();
+                    console.log('Raw upload response:', responseText);
+                    
+                    let uploadJson;
+                    try {
+                        uploadJson = JSON.parse(responseText);
+                    } catch (e) {
+                        console.error('Error parsing JSON response:', e);
+                        throw new Error('Server returned invalid response format');
+                    }
+                    
+                    // Determine filename from response
+                    profilePicFilename = uploadJson.filename || 
+                                        (typeof uploadJson.content === 'string' ? uploadJson.content : null) ||
+                                        profilePicUpload.files[0].name;
+                                        
+                    if (!uploadResponse.ok) {
+                        throw new Error(uploadJson.error || 'Failed to upload profile picture');
+                    }
+                }
+                
+                // Step 2: Update user profile
+                const userData = {
+                    username: usernameInput.value.trim(),
+                    profile_name: document.getElementById('profile_name').value.trim(),
+                    bio: bioInput.value.trim()
+                };
+                
+                if (profilePicFilename) {
+                    userData.profile_pic_url = profilePicFilename;
+                }
+                
+                const updateResponse = await fetch('/update', {
                     method: 'POST',
-                    body: imageFormData
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(userData)
                 });
                 
-                const responseText = await uploadResponse.text();
-                console.log('Raw upload response:', responseText);
+                const updateResult = await updateResponse.json();
                 
-                let uploadJson;
-                try {
-                    uploadJson = JSON.parse(responseText);
-                } catch (e) {
-                    console.error('Error parsing JSON response:', e);
-                    throw new Error('Server returned invalid response format');
+                if (updateResponse.ok && updateResult.status === true) {
+                    // Success! Redirect to home page
+                    window.location.href = '/';
+                } else {
+                    // Show error message
+                    updateError.textContent = updateResult.message || 'Failed to update profile';
+                    updateError.classList.remove('d-none');
+                    
+                    // Handle username taken error
+                    if (updateResult.error === 'username_taken') {
+                        usernameInput.classList.add('is-invalid');
+                        usernameError.textContent = 'This username is already taken';
+                    }
+                    
+                    // Reset button
+                    saveProfileBtn.disabled = false;
+                    saveProfileBtn.textContent = 'Save Profile';
                 }
-                
-                // Determine filename from response
-                profilePicFilename = uploadJson.filename || 
-                                    (typeof uploadJson.content === 'string' ? uploadJson.content : null) ||
-                                    profilePicUpload.files[0].name;
-                                    
-                if (!uploadResponse.ok) {
-                    throw new Error(uploadJson.error || 'Failed to upload profile picture');
-                }
-            }
-            
-            // Step 2: Update user profile
-            const userData = {
-                username: usernameInput.value.trim(),
-                bio: bioInput.value.trim()
-            };
-            
-            if (profilePicFilename) {
-                userData.profile_pic_url = profilePicFilename;
-            }
-            
-            const updateResponse = await fetch('/update', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(userData)
-            });
-            
-            const updateResult = await updateResponse.json();
-            
-            if (updateResponse.ok && updateResult.status === true) {
-                // Success! Redirect to home page
-                window.location.href = '/';
-            } else {
-                // Show error message
-                updateError.textContent = updateResult.message || 'Failed to update profile';
+            } catch (error) {
+                console.error('Error updating profile:', error);
+                updateError.textContent = error.message || 'An unexpected error occurred';
                 updateError.classList.remove('d-none');
-                
-                // Handle username taken error
-                if (updateResult.error === 'username_taken') {
-                    usernameInput.classList.add('is-invalid');
-                    usernameError.textContent = 'This username is already taken';
-                }
                 
                 // Reset button
                 saveProfileBtn.disabled = false;
                 saveProfileBtn.textContent = 'Save Profile';
             }
-        } catch (error) {
-            console.error('Error updating profile:', error);
-            updateError.textContent = error.message || 'An unexpected error occurred';
-            updateError.classList.remove('d-none');
+        });
+        {% endif %}
+
+        // Comments Functions
+        function expandComments(postId) {
+            console.log("Expand comments for post:", postId);
             
-            // Reset button
-            saveProfileBtn.disabled = false;
-            saveProfileBtn.textContent = 'Save Profile';
+            const commentSection = document.querySelector(`#comments-${postId}`);
+            console.log("Comment section element:", commentSection);
+            
+            if (!commentSection) {
+                console.error(`Comment section not found for post ${postId}`);
+                return;
+            }
+            
+            const commentContainer = commentSection.querySelector('.comment-section');
+            console.log("Comment container element:", commentContainer);
+            if (!commentContainer) {
+                console.error(`No comment-section inside #comments-${postId}`);
+                return;
+            }
+            
+            // Add loading indicator
+            commentContainer.innerHTML = '<div class="text-center"><div class="spinner-border spinner-border-sm" role="status"></div> Loading comments...</div>';
+            
+            // Check third problem: fetching comments
+            console.log("Fetching from:", `/posts/${postId}/comments`);
+            
+            fetch(`/posts/${postId}/comments`)
+                .then(response => {
+                    console.log("Response status:", response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log("Response data:", data);
+                    
+                    if (data.comments && data.comments.length > 0) {
+                        let commentsHtml = '';
+                        
+                        // Sort comments by timestamp (newest first)
+                        if (data.comments.some(c => c.timestamp)) {
+                            data.comments.sort((a, b) => {
+                                if (!a.timestamp) return 1;
+                                if (!b.timestamp) return -1;
+                                
+                                return new Date(b.timestamp) - new Date(a.timestamp);
+                            });
+                        }
+                        
+                        data.comments.forEach(comment => {
+                            commentsHtml += `
+                            <div class="mb-2">
+                                <span class="fw-bold">${comment.username}</span>
+                                ${comment.text}
+                            </div>`;
+                        });
+                        
+                        commentContainer.innerHTML = commentsHtml;
+                    } else {
+                        commentContainer.innerHTML = '<p class="text-muted small">No comments yet. Be the first to comment!</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching comments:', error);
+                    commentContainer.innerHTML = '<p class="text-danger">Failed to load comments. Please try again.</p>';
+                });
         }
-    });
-    {% endif %}
-</script>
-{% endif %}
 
+        // Add Comment Function
+        function addComment(event, postId) {
+            event.preventDefault();
 
+            const form = event.target;
+            const input = form.querySelector('input');
+            const button = form.querySelector('button[type="submit"]');
+            const commentText = input.value.trim();
 
+            if (!commentText) return;
 
+            // Set button to "Posting..."
+            button.disabled = true;
+            button.innerText = "Posting...";
 
-<script>
-    function expandComments(postId) {
-        console.log("Expand comments for post:", postId);
-        
-        const commentSection = document.querySelector(`#comments-${postId} .comment-section`);
-        
-        fetch(`/api/posts/${postId}/comments`)
+            fetch(`/posts/${postId}/comments`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    text: commentText
+                })
+            })
             .then(response => response.json())
             .then(data => {
-                if (data.comments) {
-                    let commentsHtml = '';
-                    data.comments.forEach(comment => {
-                        commentsHtml += `
-                        <div class="mb-2">
-                            <span class="fw-bold">${comment.username}</span>
-                            ${comment.text}
-                        </div>`;
-                    });
-                    commentSection.innerHTML = commentsHtml;
+                // Check if response uses 'success' or 'status' property
+                const isSuccess = data.success || data.status;
+                
+                if (isSuccess) {
+                    console.log("Comment added successfully:", data.comment);
+                    
+                    // Clear the input field immediately
+                    input.value = ''; 
+
+                    // Get the comment section container
+                    const commentSection = document.querySelector(`#comments-${postId} .comment-section`);
+                    
+                    if (commentSection) {
+                        // Create new comment element
+                        const newComment = document.createElement('div');
+                        newComment.className = 'mb-2';
+                        newComment.innerHTML = `<span class="fw-bold">${data.comment.username}</span> ${data.comment.text}`;
+                        
+                        // Insert at the beginning of comment section (newest first)
+                        if (commentSection.firstChild) {
+                            commentSection.insertBefore(newComment, commentSection.firstChild);
+                        } else {
+                            commentSection.appendChild(newComment);
+                        }
+                        
+                        // Replace "No comments yet" message if it exists
+                        const noCommentsMsg = commentSection.querySelector('p.text-muted.small');
+                        if (noCommentsMsg) {
+                            noCommentsMsg.remove();
+                        }
+                        
+                        // Update comment count if needed
+                        const viewCommentsLink = document.querySelector(`a[data-bs-target="#comments-${postId}"]`);
+                        if (viewCommentsLink) {
+                            // Extract current count from text like "View all X comments"
+                            const currentText = viewCommentsLink.textContent;
+                            const countMatch = currentText.match(/\d+/);
+                            if (countMatch) {
+                                const newCount = parseInt(countMatch[0]) + 1;
+                                viewCommentsLink.textContent = `View all ${newCount} comments`;
+                            }
+                        }
+                        
+                        // Make sure the comment section is visible
+                        const collapse = bootstrap.Collapse.getInstance(commentSection);
+                        if (collapse && !commentSection.classList.contains('show')) {
+                            collapse.show();
+                        }
+                    }
+                } else {
+                    console.error('Error adding comment:', data.message || 'Unknown error');
+                    alert(data.message);
                 }
             })
             .catch(error => {
-                console.error('Error fetching comments:', error);
-            });
-    }
-    
-    function addComment(postId) {
-        const form = event.target;
-        const input = form.querySelector('input');
-        const commentText = input.value.trim();
-        
-        if (!commentText) return;
-        
-        fetch(`/posts/${postId}/comments`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                text: commentText
+                console.error('Error adding comment:', error);
+                alert('Failed to add comment. Please try again.');
             })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                input.value = '';
-                
-                const commentSection = document.querySelector(`#comments-${postId} .comment-section`);
-                if (commentSection) {
-                    const newComment = document.createElement('div');
-                    newComment.className = 'mb-2';
-                    newComment.innerHTML = `<span class="fw-bold">${data.comment.username}</span> ${data.comment.text}`;
-                    commentSection.prepend(newComment);
-                }
-            }
-        })
-        .catch(error => {
-            console.error('Error adding comment:', error);
-        });
-    }
-    
-    function followUser(button, username) {
-        const isFollowing = button.textContent.trim() === 'Following';
-        
-        button.disabled = true;
-        
-        if (!isFollowing) {
-            button.textContent = 'UnFollow';
-            button.classList.remove('btn-outline-primary');
-            button.classList.add('btn-outline-secondary');
-        } else {
-            button.textContent = 'Follow';
-            button.classList.remove('btn-outline-secondary');
-            button.classList.add('btn-outline-primary');
+            .finally(() => {
+                // Reset button back to "Post"
+                button.disabled = false;
+                button.innerText = "Post";
+            });
         }
-        
-        fetch(`/follow/${username}`, {
-            method: isFollowing ? 'DELETE' : 'POST',
-            headers: {
-                'Content-Type': 'application/json'
+
+        // Follow User Function
+        function followUser(button, username) {
+            const isFollowing = button.textContent.trim() === 'Following';
+            
+            button.disabled = true;
+            
+            if (!isFollowing) {
+                button.textContent = 'Following';
+                button.classList.remove('btn-outline-primary');
+                button.classList.add('btn-outline-secondary');
+            } else {
+                button.textContent = 'Follow';
+                button.classList.remove('btn-outline-secondary');
+                button.classList.add('btn-outline-primary');
             }
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-               alert(data.message);
-                
-                const followerCountEl = document.querySelector('a[href="/following"] h6');
-                if (followerCountEl) {
-                    let count = parseInt(followerCountEl.textContent);
-                    if (!isFollowing) {
-                        followerCountEl.textContent = count + 1;
-                    } else {
-                        followerCountEl.textContent = Math.max(0, count - 1);
+            
+            fetch(`/follow/${username}`, {
+                method: isFollowing ? 'DELETE' : 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                   alert(data.message);
+                    
+                    const followerCountEl = document.querySelector('a[href="/following"] h6');
+                    if (followerCountEl) {
+                        let count = parseInt(followerCountEl.textContent);
+                        if (!isFollowing) {
+                            followerCountEl.textContent = count + 1;
+                        } else {
+                            followerCountEl.textContent = Math.max(0, count - 1);
+                        }
                     }
+                } else {
+                    console.error('Error:', data.message);
+                    revertButtonState(button, isFollowing);
                 }
-            } else {
-                console.error('Error:', data.message);
+            })
+            .catch(error => {
+                console.error('Error:', error);
                 revertButtonState(button, isFollowing);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            revertButtonState(button, isFollowing);
-            alert('Failed to update follow status. Please try again.');
-        })
-        .finally(() => {
-            button.disabled = false;
-        });
-    }
-    
-    function revertButtonState(button, wasFollowing) {
-        if (wasFollowing) {
-            button.textContent = 'Following';
-            button.classList.remove('btn-outline-primary');
-            button.classList.add('btn-outline-secondary');
-        } else {
-            button.textContent = 'Follow';
-            button.classList.remove('btn-outline-secondary');
-            button.classList.add('btn-outline-primary');
+                alert('Failed to update follow status. Please try again.');
+            })
+            .finally(() => {
+                button.disabled = false;
+            });
         }
-    }
-    
-    document.querySelectorAll('.action-icons .bi-heart').forEach(icon => {
-        icon.addEventListener('click', function() {
-            this.classList.toggle('bi-heart');
-            this.classList.toggle('bi-heart-fill');
-            this.classList.toggle('text-danger');
-            
-            const postId = this.closest('.post-card').dataset.postId;
-            const likeCountEl = this.closest('.card-body').querySelector('.like-count');
-            let likeCount = parseInt(likeCountEl.textContent);
-            
-            if (this.classList.contains('bi-heart-fill')) {
-                likeCount++;
-                fetch(`/api/posts/${postId}/like`, { method: 'POST' });
+        
+        // Revert Button State
+        function revertButtonState(button, wasFollowing) {
+            if (wasFollowing) {
+                button.textContent = 'Following';
+                button.classList.remove('btn-outline-primary');
+                button.classList.add('btn-outline-secondary');
             } else {
-                likeCount--;
-                fetch(`/api/posts/${postId}/like`, { method: 'DELETE' });
+                button.textContent = 'Follow';
+                button.classList.remove('btn-outline-secondary');
+                button.classList.add('btn-outline-primary');
             }
+        }
+        
+        // Like Button Functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.action-icons .bi-heart').forEach(icon => {
+                icon.addEventListener('click', function() {
+                    this.classList.toggle('bi-heart');
+                    this.classList.toggle('bi-heart-fill');
+                    this.classList.toggle('text-danger');
+                    
+                    const postId = this.closest('.post-card').dataset.postId;
+                    const likeCountEl = this.closest('.card-body').querySelector('.like-count');
+                    let likeCount = parseInt(likeCountEl.textContent);
+                    
+                    if (this.classList.contains('bi-heart-fill')) {
+                        likeCount++;
+                        fetch(`/api/posts/${postId}/like`, { method: 'POST' });
+                    } else {
+                        likeCount--;
+                        fetch(`/api/posts/${postId}/like`, { method: 'DELETE' });
+                    }
+                    
+                    likeCountEl.textContent = `${likeCount} likes`;
+                });
+            });
             
-            likeCountEl.textContent = `${likeCount} likes`;
+            // Add follow button event listeners
+            document.querySelectorAll('.follow-button:not([onclick])').forEach(button => {
+                const username = button.getAttribute('data-username');
+                button.addEventListener('click', function() {
+                    followUser(this, username);
+                });
+            });
         });
-    });
-    
-    document.querySelectorAll('.follow-button:not([onclick])').forEach(button => {
-        const username = button.getAttribute('data-username');
-        button.addEventListener('click', function() {
-            followUser(this, username);
+
+        // Format Timestamps Function
+        function formatTimestamps() {
+            const timestampElements = document.querySelectorAll('.timestamp');
+            
+            timestampElements.forEach(element => {
+                const timestamp = element.getAttribute('data-timestamp');
+                if (!timestamp) return;
+                
+                const date = new Date(timestamp);
+                const now = new Date();
+                const diffSeconds = Math.floor((now - date) / 1000);
+                
+                let formattedTime;
+                
+                if (diffSeconds < 60) {
+                    formattedTime = 'just now';
+                } else if (diffSeconds < 3600) {
+                    const minutes = Math.floor(diffSeconds / 60);
+                    formattedTime = `${minutes} minutes ago`;
+                } else if (diffSeconds < 86400) {
+                    const hours = Math.floor(diffSeconds / 3600);
+                    formattedTime = `${hours} hours ago`;
+                } else if (diffSeconds < 604800) { 
+                    const days = Math.floor(diffSeconds / 86400);
+                    formattedTime = days === 1 ? 'Yesterday' : `${days} days ago`;
+                } else if (now.getFullYear() === date.getFullYear()) {
+                    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                    formattedTime = `${monthNames[date.getMonth()]} ${date.getDate()}`;
+                } else {
+                    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                    formattedTime = `${monthNames[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
+                }
+                
+                element.textContent = formattedTime;
+            });
+        }
+
+        // Initialize Format Timestamps
+        document.addEventListener('DOMContentLoaded', function() {
+            formatTimestamps();
+            
+            // Update timestamps every minute
+            setInterval(formatTimestamps, 60000);
         });
-    });
-</script>
-
-<script>
-function formatTimestamps() {
-  const timestampElements = document.querySelectorAll('.timestamp');
-  
-  timestampElements.forEach(element => {
-    const timestamp = element.getAttribute('data-timestamp');
-    if (!timestamp) return;
-    
-    const date = new Date(timestamp);
-    const now = new Date();
-    const diffSeconds = Math.floor((now - date) / 1000);
-    
-    let formattedTime;
-    
-    if (diffSeconds < 60) {
-      formattedTime = 'just now';
-    } else if (diffSeconds < 3600) {
-      const minutes = Math.floor(diffSeconds / 60);
-      formattedTime = `${minutes} minutes ago`;
-    } else if (diffSeconds < 86400) {
-      const hours = Math.floor(diffSeconds / 3600);
-      formattedTime = `${hours} hours ago`;
-    } else if (diffSeconds < 604800) { 
-      const days = Math.floor(diffSeconds / 86400);
-      formattedTime = days === 1 ? 'Yesterday' : `${days} days ago`;
-    } else if (now.getFullYear() === date.getFullYear()) {
-      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      formattedTime = `${monthNames[date.getMonth()]} ${date.getDate()}`;
-    } else {
-      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      formattedTime = `${monthNames[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
-    }
-    
-    element.textContent = formattedTime;
-  });
-}
-
-document.addEventListener('DOMContentLoaded', function() {
-  formatTimestamps();
-  
-  setInterval(formatTimestamps, 60000);
-});
-</script>
-
-{% endblock %}
+    </script>
+</body>
+</html>

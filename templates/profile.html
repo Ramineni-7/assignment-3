@@ -1,224 +1,408 @@
-{% extends "home.html" %}
-
-{% block content %}
-<div class="container py-5">
-  <!-- Profile Header -->
-  <div class="bg-white rounded-3 shadow-sm mb-4 p-4">
-    <div class="row align-items-center">
-      <!-- Profile Image -->
-      <div class="col-md-3 text-center mb-4 mb-md-0">
-        <div class="position-relative d-inline-block">
-          <img src="/images/file_name={{ profile_pic_url | urlencode }}" 
-               class="rounded-circle" width="150" height="150" 
-               alt="{{ profile_username }}" style="object-fit: cover;">
-          {% if is_own_profile %}
-          <div class="position-absolute bottom-0 end-0">
-            <a href="/edit_profile" class="btn btn-sm btn-primary rounded-circle">
-              <i class="bi bi-pencil"></i>
-            </a>
-          </div>
-          {% endif %}
-        </div>
-      </div>
-      
-      <!-- Profile Info -->
-      <div class="col-md-9">
-        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3">
-          <h2 class="fs-3 mb-3 mb-md-0">
-            {% if is_own_profile %}
-              {{ user.Profile_Name }}
-            {% else %}
-              {{ profile.Profile_Name }}
-            {% endif %}
-          </h2>
-          
-          <div>
-            {% if is_own_profile %}
-              <!-- <a href="/edit_profile" class="btn btn-outline-dark">Edit Profile</a> -->
-            {% else %}
-              <button id="follow-button" 
-                     class="btn {{ 'btn-outline-dark' if is_following else 'btn-primary' }}" 
-                     data-username="{{ profile_username }}">
-                {{ 'Following' if is_following else 'Follow' }}
-              </button>
-              <button class="btn btn-outline-dark ms-2">
-                <i class="bi bi-chat-dots"></i> Message
-              </button>
-            {% endif %}
-          </div>
-        </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InstaClone - Profile</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary-color: #405DE6;
+            --primary-gradient: linear-gradient(45deg, #405DE6, #5851DB, #833AB4, #C13584, #E1306C, #FD1D1D);
+            --secondary-color: #E1306C;
+            --bg-color: #FAFAFA;
+            --post-bg: #FFFFFF;
+            --text-dark: #262626;
+            --text-light: #8E8E8E;
+            --border-color: #DBDBDB;
+        }
         
-        <!-- User Stats -->
-        <div class="d-flex mb-3">
-          <div class="me-4"><strong>{{ posts | length }}</strong> posts</div>
-          <div class="me-4">
-            <!-- <a href="/followers/{{ profile_username }}" class="text-decoration-none text-dark"> -->
-              <strong>{{ profile.Followers | length if profile.Followers else 0 }}</strong> followers
-            </a>
-          </div>
-          <div>
-            <!-- <a href="/following/{{ profile_username }}" class="text-decoration-none text-dark"> -->
-              <strong>{{ profile.Following | length if profile.Following else 0 }}</strong> following
-            </a>
-          </div>
-        </div>
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
         
-        <!-- Bio -->
-        <div class="bio">
-          <div class="fw-bold">{{ profile_name }}</div>
-          <p class="mb-2">{{ bio }}</p>
-          {% if website %}
-            <a href="{{ website }}" target="_blank" class="text-decoration-none">{{ website }}</a>
-          {% endif %}
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Profile Navigation -->
-  <div class="bg-white rounded-3 shadow-sm mb-4">
-    <ul class="nav nav-tabs nav-fill border-bottom-0 justify-content-center">
-      <li class="nav-item">
-        <a class="nav-link active py-3" href="#posts" data-bs-toggle="tab">
-          <i class="bi bi-grid-3x3 me-2"></i>Posts
-        </a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link py-3" href="#saved" data-bs-toggle="tab">
-          <i class="bi bi-bookmark me-2"></i>Saved
-        </a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link py-3" href="#tagged" data-bs-toggle="tab">
-          <i class="bi bi-tag me-2"></i>Tagged
-        </a>
-      </li>
-    </ul>
-  </div>
-
-  <!-- Tab Content -->
-  <div class="tab-content">
-    <!-- Posts Tab -->
-    <div class="tab-pane fade show active" id="posts">
-      {% if posts %}
-        <div class="row g-3">
-          {% for post in posts %}
-          <div class="col-md-4 col-sm-6">
-            <div class="position-relative rounded overflow-hidden">
-              <!-- <a href="/post/{{ post.Id }}" class="d-block"> -->
-                <img src="/images/file_name={{ post.Image_ref | urlencode }}" 
-                     class="w-100" style="aspect-ratio: 1; object-fit: cover;" alt="Post image">
-                <div class="position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-flex align-items-center justify-content-center post-overlay">
-                  <div class="d-flex text-white">
-                    <div class="me-4">
-                      <i class="bi bi-heart-fill me-1"></i>
-                      <span>{{ post.likes|default(0) }}</span>
-                    </div>
-                    <div>
-                      <i class="bi bi-chat-fill me-1"></i>
-                      <span>{{ post.comments|length|default(0) }}</span>
-                    </div>
-                  </div>
+        .navbar {
+            background-color: var(--post-bg);
+            border-bottom: 1px solid var(--border-color);
+            padding: 10px 0;
+        }
+        
+        .navbar-brand {
+            font-family: 'Instagram Sans', cursive;
+            font-size: 2rem;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: bold;
+        }
+        
+        .content-container {
+            margin-top: 80px;
+            padding-bottom: 40px;
+        }
+        
+        .card {
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        
+        .btn-primary {
+            background: var(--primary-gradient);
+            border: none;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+        
+        .btn-outline-primary {
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-outline-primary:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .profile-pic {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--primary-color);
+        }
+        
+        .profile-pic-lg {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--secondary-color);
+        }
+        
+        .nav-icon {
+            font-size: 1.5rem;
+            margin: 0 10px;
+            color: var(--text-dark);
+        }
+        
+        .post-overlay {
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        @media (min-width: 768px) {
+            .position-relative:hover .post-overlay {
+                opacity: 1;
+            }
+        }
+        
+        @media (max-width: 767px) {
+            .post-overlay {
+                display: none;
+            }
+        }
+        
+        .auth-pending {
+            visibility: hidden;
+        }
+        
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 10px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary-color);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="/">InstaClone</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mx-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/"><i class="bi bi-house-fill nav-icon"></i></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/search"><i class="bi bi-search nav-icon"></i></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/post"><i class="bi bi-plus-square nav-icon"></i></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/profile/me"><i class="bi bi-person-circle nav-icon"></i></a>
+                    </li>
+                </ul>
+                <div class="d-flex">
+                    <button id="sign-out" class="btn btn-outline-danger" hidden>Sign Out</button>
                 </div>
-              </a>
             </div>
-          </div>
-          {% endfor %}
         </div>
-      {% else %}
-        <div class="bg-white rounded-3 shadow-sm py-5 text-center">
-          <div class="text-secondary" style="font-size: 4rem;">
-            <i class="bi bi-camera"></i>
-          </div>
-          <h5 class="mt-4">No Posts Yet</h5>
-          {% if is_own_profile %}
-            <p class="text-muted">Share photos and videos that will appear on your profile</p>
-            <a href="/post" class="btn btn-primary mt-3">Share Your First Photo</a>
-          {% else %}
-            <p class="text-muted">When {{ profile_username }} shares photos, you'll see them here.</p>
-          {% endif %}
-        </div>
-      {% endif %}
-    </div>
-    
-    <!-- Saved Tab -->
-    <div class="tab-pane fade" id="saved">
-      <div class="bg-white rounded-3 shadow-sm py-5 text-center">
-        <div class="text-secondary" style="font-size: 4rem;">
-          <i class="bi bi-bookmark"></i>
-        </div>
-        <h5 class="mt-4">Save</h5>
-        <p class="text-muted">Save photos and videos that you want to see again.</p>
-      </div>
-    </div>
-    
-    <!-- Tagged Tab -->
-    <div class="tab-pane fade" id="tagged">
-      <div class="bg-white rounded-3 shadow-sm py-5 text-center">
-        <div class="text-secondary" style="font-size: 4rem;">
-          <i class="bi bi-tag"></i>
-        </div>
-        <h5 class="mt-4">Photos of you</h5>
-        <p class="text-muted">When people tag you in photos, they'll appear here.</p>
-      </div>
-    </div>
-  </div>
-</div>
+    </nav>
 
-<style>
-  .post-overlay {
-    opacity: 0;
-    transition: opacity 0.3s ease;
-  }
-  
-  @media (min-width: 768px) {
-    .position-relative:hover .post-overlay {
-      opacity: 1;
-    }
-  }
-  
-  @media (max-width: 767px) {
-    .post-overlay {
-      display: none;
-    }
-  }
-</style>
+    <!-- Login Box - Will be hidden once logged in -->
+    <div id="login-box" class="row justify-content-center auth-pending">
+        <div class="col-md-6 col-lg-4">
+            <div class="card login-card gradient-border">
+                <div class="card-body text-center">
+                    <h1 class="login-logo navbar-brand">InstaClone</h1>
+                    <p class="text-muted mb-4">Sign in to see photos and videos from your friends.</p>
+                    <form>
+                        <div class="mb-3">
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                                <input type="email" class="form-control" id="email" placeholder="Email" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                                <input type="password" class="form-control" id="password" placeholder="Password" required>
+                            </div>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="button" id="login" class="btn btn-primary">Log In</button>
+                            <div class="text-center my-3">
+                                <span class="text-muted">OR</span>
+                            </div>
+                            <button type="button" id="sign-up" class="btn btn-outline-primary">Sign Up</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<script>
-  // Handle follow/unfollow
-  const followButton = document.getElementById('follow-button');
-  if (followButton) {
-    followButton.addEventListener('click', function() {
-      const username = this.getAttribute('data-username');
-      const isFollowing = this.textContent.trim() === 'Following';
-      
-      // Make API call to follow/unfollow
-      fetch(`/api/follow/${username}`, {
-        method: isFollowing ? 'DELETE' : 'POST',
-        headers: {
-          'Content-Type': 'application/json'
+    <!-- Main Content Area - Profile -->
+    <div id="content" class="container content-container">
+        <div class="container py-5">
+            <!-- Profile Header -->
+            <div class="bg-white rounded-3 shadow-sm mb-4 p-4">
+                <div class="row align-items-center">
+                    <!-- Profile Image -->
+                    <div class="col-md-3 text-center mb-4 mb-md-0">
+                        <div class="position-relative d-inline-block">
+                            <img src="/images/file_name={{ profile_pic_url | urlencode }}" 
+                                class="rounded-circle" width="150" height="150" 
+                                alt="{{ profile_username }}" style="object-fit: cover;">
+                            {% if is_own_profile %}
+                            <div class="position-absolute bottom-0 end-0">
+                                <a href="/edit_profile" class="btn btn-sm btn-primary rounded-circle">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Profile Info -->
+                    <div class="col-md-9">
+                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3">
+                            <h2 class="fs-3 mb-3 mb-md-0">
+                                {% if is_own_profile %}
+                                {{ user.Profile_Name }}
+                                {% else %}
+                                {{ profile.Profile_Name }}
+                                {% endif %}
+                            </h2>
+                            
+                            <div>
+                                {% if is_own_profile %}
+                                <!-- <a href="/edit_profile" class="btn btn-outline-dark">Edit Profile</a> -->
+                                {% else %}
+                                <button id="follow-button" 
+                                        class="btn {{ 'btn-outline-dark' if is_following else 'btn-primary' }}" 
+                                        data-username="{{ profile_username }}">
+                                    {{ 'Following' if is_following else 'Follow' }}
+                                </button>
+                                <button class="btn btn-outline-dark ms-2">
+                                    <i class="bi bi-chat-dots"></i> Message
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- User Stats -->
+                        <div class="d-flex mb-3">
+                            <div class="me-4"><strong>{{ posts | length }}</strong> posts</div>
+                            <div class="me-4">
+                                <!-- <a href="/followers/{{ profile_username }}" class="text-decoration-none text-dark"> -->
+                                <strong>{{ profile.Followers | length if profile.Followers else 0 }}</strong> followers
+                                </a>
+                            </div>
+                            <div>
+                                <!-- <a href="/following/{{ profile_username }}" class="text-decoration-none text-dark"> -->
+                                <strong>{{ profile.Following | length if profile.Following else 0 }}</strong> following
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <!-- Bio -->
+                        <div class="bio">
+                            <div class="fw-bold">{{ profile_name }}</div>
+                            <p class="mb-2">{{ bio }}</p>
+                            {% if website %}
+                                <a href="{{ website }}" target="_blank" class="text-decoration-none">{{ website }}</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Profile Navigation -->
+            <div class="bg-white rounded-3 shadow-sm mb-4">
+                <ul class="nav nav-tabs nav-fill border-bottom-0 justify-content-center">
+                    <li class="nav-item">
+                        <a class="nav-link active py-3" href="#posts" data-bs-toggle="tab">
+                            <i class="bi bi-grid-3x3 me-2"></i>Posts
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link py-3" href="#saved" data-bs-toggle="tab">
+                            <i class="bi bi-bookmark me-2"></i>Saved
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link py-3" href="#tagged" data-bs-toggle="tab">
+                            <i class="bi bi-tag me-2"></i>Tagged
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="tab-content">
+                <!-- Posts Tab -->
+                <div class="tab-pane fade show active" id="posts">
+                    {% if posts %}
+                        <div class="row g-3">
+                            {% for post in posts %}
+                            <div class="col-md-4 col-sm-6">
+                                <div class="position-relative rounded overflow-hidden">
+                                    <!-- <a href="/post/{{ post.Id }}" class="d-block"> -->
+                                        <img src="/images/file_name={{ post.Image_ref | urlencode }}" 
+                                            class="w-100" style="aspect-ratio: 1; object-fit: cover;" alt="Post image">
+                                        <div class="position-absolute top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 d-flex align-items-center justify-content-center post-overlay">
+                                            <div class="d-flex text-white">
+                                                <div class="me-4">
+                                                    <i class="bi bi-heart-fill me-1"></i>
+                                                    <span>{{ post.likes|default(0) }}</span>
+                                                </div>
+                                                <div>
+                                                    <i class="bi bi-chat-fill me-1"></i>
+                                                    <span>{{ post.comments|length|default(0) }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="bg-white rounded-3 shadow-sm py-5 text-center">
+                            <div class="text-secondary" style="font-size: 4rem;">
+                                <i class="bi bi-camera"></i>
+                            </div>
+                            <h5 class="mt-4">No Posts Yet</h5>
+                            {% if is_own_profile %}
+                                <p class="text-muted">Share photos and videos that will appear on your profile</p>
+                                <a href="/post" class="btn btn-primary mt-3">Share Your First Photo</a>
+                            {% else %}
+                                <p class="text-muted">When {{ profile_username }} shares photos, you'll see them here.</p>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Saved Tab -->
+                <div class="tab-pane fade" id="saved">
+                    <div class="bg-white rounded-3 shadow-sm py-5 text-center">
+                        <div class="text-secondary" style="font-size: 4rem;">
+                            <i class="bi bi-bookmark"></i>
+                        </div>
+                        <h5 class="mt-4">Save</h5>
+                        <p class="text-muted">Save photos and videos that you want to see again.</p>
+                    </div>
+                </div>
+                
+                <!-- Tagged Tab -->
+                <div class="tab-pane fade" id="tagged">
+                    <div class="bg-white rounded-3 shadow-sm py-5 text-center">
+                        <div class="text-secondary" style="font-size: 4rem;">
+                            <i class="bi bi-tag"></i>
+                        </div>
+                        <h5 class="mt-4">Photos of you</h5>
+                        <p class="text-muted">When people tag you in photos, they'll appear here.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="/static/firebase-login.js"></script>
+    
+    <script>
+        // Handle follow/unfollow
+        const followButton = document.getElementById('follow-button');
+        if (followButton) {
+            followButton.addEventListener('click', function() {
+                const username = this.getAttribute('data-username');
+                const isFollowing = this.textContent.trim() === 'Following';
+                
+                // Make API call to follow/unfollow
+                fetch(`/api/follow/${username}`, {
+                    method: isFollowing ? 'DELETE' : 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        this.textContent = isFollowing ? 'Follow' : 'Following';
+                        this.classList.toggle('btn-primary');
+                        this.classList.toggle('btn-outline-dark');
+                        
+                        // Update follower count without page reload
+                        const followerCountEl = document.querySelector('div.me-4:nth-child(2) strong');
+                        if (followerCountEl) {
+                            let count = parseInt(followerCountEl.textContent);
+                            followerCountEl.textContent = isFollowing ? count - 1 : count + 1;
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Follow/unfollow error:', error);
+                    alert('An error occurred. Please try again.');
+                });
+            });
         }
-      })
-      .then(response => response.json())
-      .then(data => {
-        if (data.success) {
-          this.textContent = isFollowing ? 'Follow' : 'Following';
-          this.classList.toggle('btn-primary');
-          this.classList.toggle('btn-outline-dark');
-          
-          // Update follower count without page reload
-          const followerCountEl = document.querySelector('a[href^="/followers/"] strong');
-          if (followerCountEl) {
-            let count = parseInt(followerCountEl.textContent);
-            followerCountEl.textContent = isFollowing ? count - 1 : count + 1;
-          }
-        }
-      })
-      .catch(error => {
-        console.error('Follow/unfollow error:', error);
-        alert('An error occurred. Please try again.');
-      });
-    });
-  }
-</script>
-{% endblock %}
+    </script>
+</body>
+</html>
