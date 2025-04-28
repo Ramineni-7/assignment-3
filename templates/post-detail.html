@@ -58,12 +58,6 @@
             padding: 12px 16px;
         }
         
-        .card-img-top {
-            width: 100%;
-            max-height: 600px;
-            object-fit: cover;
-        }
-        
         .btn-primary {
             background: var(--primary-gradient);
             border: none;
@@ -75,26 +69,15 @@
             transform: translateY(-2px);
         }
         
-        .btn-outline-primary {
-            color: var(--primary-color);
-            border-color: var(--primary-color);
-        }
-        
-        .btn-outline-primary:hover {
-            background-color: var(--primary-color);
-            color: white;
-        }
-        
         .profile-pic {
-            width: 40px;
-            height: 40px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
             object-fit: cover;
-            border: 2px solid var(--primary-color);
         }
         
         .comment-section {
-            max-height: 400px;
+            max-height: 300px;
             overflow-y: auto;
         }
         
@@ -118,90 +101,91 @@
             color: var(--text-dark);
         }
         
+        .auth-pending {
+            visibility: hidden;
+        }
+        
+        /* Post Container Styles */
+        .post-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: var(--post-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 3px;
+            margin-bottom: 24px;
+        }
+        
+        .post-header {
+            display: flex;
+            align-items: center;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .post-username {
+            font-weight: 600;
+            margin-left: 14px;
+        }
+        
+        .post-image-container {
+            width: 100%;
+            background-color: black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .post-image {
+            width: 100%;
+            object-fit: contain;
+        }
+        
+        .card-body {
+            padding: 14px 16px;
+        }
+        
         .like-count {
-            font-weight: bold;
-            margin-bottom: 5px;
+            font-weight: 600;
+            margin: 8px 0;
         }
         
         .post-caption {
             margin-bottom: 10px;
         }
         
+        .post-form {
+            border-top: 1px solid var(--border-color);
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .post-input {
+            flex: 1;
+            border: none;
+            outline: none;
+            padding: 8px 0;
+            font-size: 14px;
+            background: transparent;
+        }
+        
+        .post-btn {
+            background: none;
+            border: none;
+            color: var(--primary-color);
+            font-weight: 600;
+            cursor: pointer;
+            padding: 0 8px;
+        }
+        
+        .post-btn:disabled {
+            opacity: 0.4;
+        }
+        
         .timestamp {
             font-size: 12px;
             color: var(--text-light);
-            text-transform: uppercase;
             margin-top: 5px;
-        }
-        
-        .auth-pending {
-            visibility: hidden;
-        }
-        
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-        
-        ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-        }
-        
-        ::-webkit-scrollbar-thumb {
-            background: var(--primary-color);
-            border-radius: 10px;
-        }
-        
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--secondary-color);
-        }
-        
-        /* Post Detail Specific Styles */
-        .post-detail-container {
-            max-width: 935px;
-            margin: 0 auto;
-        }
-        
-        @media (min-width: 992px) {
-            .post-detail-card {
-                display: flex;
-                flex-direction: row;
-                max-height: 80vh;
-            }
-            
-            .post-image-container {
-                width: 60%;
-                border-right: 1px solid var(--border-color);
-            }
-            
-            .post-details-container {
-                width: 40%;
-                display: flex;
-                flex-direction: column;
-            }
-            
-            .post-image {
-                height: 100%;
-                object-fit: cover;
-            }
-        }
-        
-        @media (max-width: 991px) {
-            .post-image-container {
-                max-height: 70vh;
-                overflow: hidden;
-            }
-            
-            .post-image {
-                width: 100%;
-                object-fit: contain;
-                max-height: 70vh;
-            }
-        }
-        
-        .post-comments {
-            flex-grow: 1;
-            overflow-y: auto;
-            max-height: calc(80vh - 250px);
         }
     </style>
 </head>
@@ -267,76 +251,76 @@
     </div>
 
     <div id="content" class="container content-container">
-        <div class="post-detail-container">
-            <div class="card post-detail-card">
-                <div class="post-image-container">
-                    <img src="/images/file_name={{ post.Image_ref | urlencode }}" class="post-image" alt="Post image">
+        <div class="post-container">
+            <!-- Post Header with Profile Pic and Username -->
+            <div class="post-header">
+                <img src="/images/file_name={{ post.User_Pic | urlencode }}" alt="{{ post.Username }}" class="profile-pic">
+                <a href="/profile/{{ post.Username }}" class="post-username text-decoration-none text-dark">{{ post.Username }}</a>
+            </div>
+            
+            <!-- Post Image -->
+            <div class="post-image-container">
+                <img src="/images/file_name={{ post.Image_ref | urlencode }}" class="post-image" alt="Post image">
+            </div>
+            
+            <!-- Post Body - Actions, Caption, Comments -->
+            <div class="card-body">
+                <!-- Action Icons -->
+                <div class="action-icons mb-2">
+                    <i class="bi bi-heart{% if post.user_has_liked %}-fill text-danger{% endif %}"></i>
+                    <i class="bi bi-chat"></i>
+                    <i class="bi bi-send"></i>
+                    <i class="bi bi-bookmark float-end"></i>
                 </div>
                 
-                <div class="post-details-container">
-                    <div class="card-header">
-                        <div class="d-flex align-items-center">
-                            <img src="/images/file_name={{ post.User_Pic | urlencode }}" alt="{{ post.Username }}" class="profile-pic me-3">
-                            <div>
-                                <a href="/profile/{{ post.Username }}" class="text-decoration-none text-dark fw-bold">{{ post.Username }}</a>
-                                <div class="timestamp" data-timestamp="{{ post.Date }}">{{ post.Date }}</div>
-                            </div>
-                        </div>
-                    </div>
+                <!-- Like Count -->
+                <div class="like-count">{{ post.Likes if post.Likes else 0 }} likes</div>
+                
+                <!-- Caption -->
+                <div class="post-caption">
+                    <span class="fw-bold">{{ post.Username }}</span> {{ post.Caption }}
+                </div>
+                
+                <!-- Comments Section -->
+                <div class="mt-2">
+                    <a href="#" class="text-muted text-decoration-none small" data-bs-toggle="collapse" data-bs-target="#comments-{{ post.Id }}">
+                        View all {{ post.Comments|length if post.Comments else 0 }} comments
+                    </a>
                     
-                    <div class="post-comments p-3">
-                        <div class="d-flex mb-4">
-                            <img src="/images/file_name={{ post.User_Pic | urlencode }}" alt="{{ post.Username }}" class="profile-pic me-3">
-                            <div>
-                                <div>
-                                    <a href="/profile/{{ post.Username }}" class="text-decoration-none text-dark fw-bold">{{ post.Username }}</a>
-                                    <span>{{ post.Caption }}</span>
-                                </div>
-                                <div class="timestamp small" data-timestamp="{{ post.Date }}">{{ post.Date }}</div>
-                            </div>
-                        </div>
-                        
-                        <div class="comment-section" id="comments-{{ post.Id }}">
+                    <div class="collapse mt-2" id="comments-{{ post.Id }}">
+                        <div class="comment-section">
                             {% if post.Comments %}
-                                {% set sorted_comments = post.Comments|sort(attribute='Date', reverse=True) %}
-                                {% for comment in sorted_comments %}
-                                    <div class="d-flex mb-3">
-                                        <div>
-                                            <div>
-                                                <a href="/profile/{{ comment.Username }}" class="text-decoration-none text-dark fw-bold">{{ comment.Username }}</a>
-                                                <span>{{ comment.Text }}</span>
-                                            </div>
-                                            <div class="timestamp small" data-timestamp="{{ comment.Date }}">{{ comment.Date }}</div>
-                                        </div>
-                                    </div>
-                                {% endfor %}
+                            {% set sorted_comments = post.Comments|sort(attribute='Date', reverse=True) %}
+                            {% for comment in sorted_comments %}
+                                {% if loop.index <= 5 %}
+                                <div class="mb-2">
+                                    <span class="fw-bold">{{ comment.Username }}</span>
+                                    {{ comment.Text }}
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if post.Comments|length > 5 %}
+                            <button class="btn btn-sm btn-link p-0" onclick="expandComments('{{ post.Id }}')">
+                                View all {{ post.Comments|length }} comments
+                            </button>
+                            {% endif %}
                             {% else %}
-                                <p class="text-muted text-center">No comments yet. Be the first to comment!</p>
+                            <p class="text-muted small">No comments yet. Be the first to comment!</p>
                             {% endif %}
                         </div>
                     </div>
                     
-                    <div class="p-3 border-top">
-                        <div class="action-icons mb-2">
-                            <i class="bi bi-heart{% if post.user_has_liked %}-fill text-danger{% endif %}"></i>
-                            <i class="bi bi-chat"></i>
-                            <i class="bi bi-send"></i>
-                            <i class="bi bi-bookmark float-end"></i>
-                        </div>
-                        
-                        <div class="like-count">{{ post.Likes if post.Likes else 0 }} likes</div>
-                        
-                        <div class="timestamp small mb-3" data-timestamp="{{ post.Date }}">{{ post.Date }}</div>
-                        
-                        <form class="mt-3" onsubmit="addComment(event, '{{ post.Id }}'); return false;">
-                            <div class="input-group">
-                                <input type="text" class="form-control form-control-sm" placeholder="Add a comment..." required>
-                                <button class="btn btn-outline-primary btn-sm" type="submit">Post</button>
-                            </div>
-                        </form>
-                    </div>
+                    <!-- Timestamp -->
+                    <div class="timestamp" data-timestamp="{{ post.Date }}">{{ post.Date }}</div>
                 </div>
             </div>
+            
+            <!-- Comment Form -->
+            <form class="post-form" onsubmit="addComment(event, '{{ post.Id }}'); return false;">
+                <input type="text" class="post-input" placeholder="Add a comment..." required>
+                <button class="post-btn" type="submit">Post</button>
+            </form>
         </div>
     </div>
 
@@ -344,6 +328,7 @@
     <script type="module" src="/static/firebase-login.js"></script>
     
     <script>
+        // Format timestamps function
         function formatTimestamps() {
             const timestampElements = document.querySelectorAll('.timestamp');
             
@@ -361,13 +346,13 @@
                     formattedTime = 'just now';
                 } else if (diffSeconds < 3600) {
                     const minutes = Math.floor(diffSeconds / 60);
-                    formattedTime = `${minutes} minutes ago`;
+                    formattedTime = `${minutes}m`;
                 } else if (diffSeconds < 86400) {
                     const hours = Math.floor(diffSeconds / 3600);
-                    formattedTime = `${hours} hours ago`;
+                    formattedTime = `${hours}h`;
                 } else if (diffSeconds < 604800) { 
                     const days = Math.floor(diffSeconds / 86400);
-                    formattedTime = days === 1 ? 'Yesterday' : `${days} days ago`;
+                    formattedTime = `${days}d`;
                 } else if (now.getFullYear() === date.getFullYear()) {
                     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
                     formattedTime = `${monthNames[date.getMonth()]} ${date.getDate()}`;
@@ -380,6 +365,164 @@
             });
         }
 
+        // Expand Comments Function (from main.html)
+        function expandComments(postId) {
+            console.log("Expand comments for post:", postId);
+            
+            const commentSection = document.querySelector(`#comments-${postId}`);
+            console.log("Comment section element:", commentSection);
+            
+            if (!commentSection) {
+                console.error(`Comment section not found for post ${postId}`);
+                return;
+            }
+            
+            const commentContainer = commentSection.querySelector('.comment-section');
+            console.log("Comment container element:", commentContainer);
+            
+            if (!commentContainer) {
+                console.error(`No comment-section inside #comments-${postId}`);
+                return;
+            }
+            
+            // Add loading indicator
+            commentContainer.innerHTML = '<div class="text-center"><div class="spinner-border spinner-border-sm" role="status"></div> Loading comments...</div>';
+            
+            // Check third problem: fetching comments
+            console.log("Fetching from:", `/posts/${postId}/comments`);
+            
+            fetch(`/posts/${postId}/comments`)
+                .then(response => {
+                    console.log("Response status:", response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log("Response data:", data);
+                    
+                    if (data.comments && data.comments.length > 0) {
+                        let commentsHtml = '';
+                        
+                        // Sort comments by timestamp (newest first)
+                        if (data.comments.some(c => c.timestamp)) {
+                            data.comments.sort((a, b) => {
+                                if (!a.timestamp) return 1;
+                                if (!b.timestamp) return -1;
+                                
+                                return new Date(b.timestamp) - new Date(a.timestamp);
+                            });
+                        }
+                        
+                        data.comments.forEach(comment => {
+                            commentsHtml += `
+                            <div class="mb-2">
+                                <span class="fw-bold">${comment.username}</span>
+                                ${comment.text}
+                            </div>`;
+                        });
+                        
+                        commentContainer.innerHTML = commentsHtml;
+                    } else {
+                        commentContainer.innerHTML = '<p class="text-muted small">No comments yet. Be the first to comment!</p>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching comments:', error);
+                    commentContainer.innerHTML = '<p class="text-danger">Failed to load comments. Please try again.</p>';
+                });
+        }
+
+        // Add Comment Function
+        function addComment(event, postId) {
+            event.preventDefault();
+
+            const form = event.target;
+            const input = form.querySelector('.post-input');
+            const button = form.querySelector('.post-btn');
+            const commentText = input.value.trim();
+
+            if (!commentText) return;
+
+            // Set button to "Posting..."
+            button.disabled = true;
+            button.innerText = "Posting...";
+
+            fetch(`/posts/${postId}/comments`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    text: commentText
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Check if response uses 'success' or 'status' property
+                const isSuccess = data.success || data.status;
+                
+                if (isSuccess) {
+                    console.log("Comment added successfully:", data.comment);
+                    
+                    // Clear the input field immediately
+                    input.value = ''; 
+
+                    // Get the comment section container
+                    const commentSection = document.querySelector(`#comments-${postId} .comment-section`);
+                    
+                    if (commentSection) {
+                        // Create new comment element
+                        const newComment = document.createElement('div');
+                        newComment.className = 'mb-2';
+                        newComment.innerHTML = `<span class="fw-bold">${data.comment.username}</span> ${data.comment.text}`;
+                        
+                        // Insert at the beginning of comment section (newest first)
+                        if (commentSection.firstChild) {
+                            commentSection.insertBefore(newComment, commentSection.firstChild);
+                        } else {
+                            commentSection.appendChild(newComment);
+                        }
+                        
+                        // Replace "No comments yet" message if it exists
+                        const noCommentsMsg = commentSection.querySelector('p.text-muted.small');
+                        if (noCommentsMsg) {
+                            noCommentsMsg.remove();
+                        }
+                        
+                        // Update comment count if needed
+                        const viewCommentsLink = document.querySelector(`a[data-bs-target="#comments-${postId}"]`);
+                        if (viewCommentsLink) {
+                            // Extract current count from text like "View all X comments"
+                            const currentText = viewCommentsLink.textContent;
+                            const countMatch = currentText.match(/\d+/);
+                            if (countMatch) {
+                                const newCount = parseInt(countMatch[0]) + 1;
+                                viewCommentsLink.textContent = `View all ${newCount} comments`;
+                            }
+                        }
+                        
+                        // Make sure the comment section is visible
+                        const collapse = bootstrap.Collapse.getInstance(commentSection);
+                        if (collapse && !commentSection.classList.contains('show')) {
+                            collapse.show();
+                        }
+                    }
+                } else {
+                    console.error('Error adding comment:', data.message || 'Unknown error');
+                    alert(data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error adding comment:', error);
+                alert('Failed to add comment. Please try again.');
+            })
+            .finally(() => {
+                // Reset button back to "Post"
+                button.disabled = false;
+                button.innerText = "Post";
+            });
+        }
+
+        // Like button functionality
         document.addEventListener('DOMContentLoaded', function() {
             formatTimestamps();
             setInterval(formatTimestamps, 60000);
@@ -405,80 +548,6 @@
                 likeCountEl.textContent = `${likeCount} likes`;
             });
         });
-
-        function addComment(event, postId) {
-            event.preventDefault();
-
-            const form = event.target;
-            const input = form.querySelector('input');
-            const button = form.querySelector('button[type="submit"]');
-            const commentText = input.value.trim();
-
-            if (!commentText) return;
-
-            button.disabled = true;
-            button.innerText = "Posting...";
-
-            fetch(`/posts/${postId}/comments`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    text: commentText
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                const isSuccess = data.success || data.status;
-                
-                if (isSuccess) {
-                    console.log("Comment added successfully:", data.comment);
-                    
-                    input.value = ''; 
-
-                    const commentSection = document.querySelector(`#comments-${postId}`);
-                    
-                    if (commentSection) {
-                        const noCommentsMsg = commentSection.querySelector('p.text-muted.text-center');
-                        if (noCommentsMsg) {
-                            noCommentsMsg.remove();
-                        }
-                        
-                        const newComment = document.createElement('div');
-                        newComment.className = 'd-flex mb-3';
-                        newComment.innerHTML = `
-                            <img src="/images/file_name=${encodeURIComponent(data.comment.user_pic || '{{ user.Profile_Pic_Url }}')}" 
-                                alt="${data.comment.username}" class="profile-pic me-3">
-                            <div>
-                                <div>
-                                    <a href="/profile/${data.comment.username}" class="text-decoration-none text-dark fw-bold">${data.comment.username}</a>
-                                    <span>${data.comment.text}</span>
-                                </div>
-                                <div class="timestamp small">just now</div>
-                            </div>
-                        `;
-                        
-                        if (commentSection.firstChild) {
-                            commentSection.insertBefore(newComment, commentSection.firstChild);
-                        } else {
-                            commentSection.appendChild(newComment);
-                        }
-                    }
-                } else {
-                    console.error('Error adding comment:', data.message || 'Unknown error');
-                    alert(data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error adding comment:', error);
-                alert('Failed to add comment. Please try again.');
-            })
-            .finally(() => {
-                button.disabled = false;
-                button.innerText = "Post";
-            });
-        }
     </script>
 </body>
 </html>

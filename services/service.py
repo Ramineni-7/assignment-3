@@ -20,48 +20,54 @@ class Service:
 
 
     @staticmethod
-    def get_post(user:User,post_id:UUID):
+    def get_post(user: User, post_id: UUID):
         try:
-            post_doc = firestore_db.collection("Post").document(str(post_id)).get()
-            if not post_doc.exists:
+            post_doc = firestore_db.collection("Post").where("Id", "==", post_id).get()
+            if not post_doc:
                 raise Exception("Post not found")
-            post = PostOutput(**post_doc.to_dict())
-            post.Id = str(post.Id)
-            post.UserId = str(post.UserId)
-            user_pic_query = firestore_db.collection('User').where('Id', '==', post.UserId).limit(1).get()
+            print('good till here')
+
+            post_data = post_doc[0].to_dict()
+
+            post_data['Id'] = str(post_data['Id'])
+            post_data['UserId'] = str(post_data['UserId'])
+            if isinstance(post_data.get('Date'), datetime.datetime):
+                post_data['Date'] = post_data['Date'].isoformat()
+
+            user_pic_query = firestore_db.collection('User').where('Id', '==', post_data['UserId']).limit(1).get()
             if user_pic_query:
-                post.User_Pic = user_pic_query[0].to_dict().get("Profile_Pic_Url", "")
+                user_pic_data = user_pic_query[0].to_dict()
+                user_pic_url = user_pic_data.get('Profile_Pic_Url', "default_user.jpeg")
             else:
-                post.User_Pic = "default_user.jpeg"
-            if isinstance(post.Date, datetime.datetime):
-                post.Date = post.Date.isoformat()
-            comment_docs = firestore_db.collection('Comment').where('PostId', '==', str(post.Id)).stream()
+                user_pic_url = "default_user.jpeg"
+            
+            comment_docs = firestore_db.collection('Comment').where('PostId', '==', post_data['Id']).stream()
             comments = []
             for doc in comment_docs:
                 comment_data = doc.to_dict()
-                comment = Comment(**comment_data)
-                if isinstance(comment.Date, datetime.datetime):
-                    comment.Date = comment.Date.isoformat()
-            comments.append(comment)
-            post.Comments = comments
-            owner_username = post.Username
-            owner_query = firestore_db.collection("User").where("Username", "==", owner_username).limit(1).stream()
-            owner_docs = list(owner_query)
-            if not owner_docs:
-                raise Exception("Post owner not found")
-            
-            owner_data = owner_docs[0].to_dict()
-            data = {
-                "post": post,
-                "profile_username": owner_username,
-                "profile_name": owner_data.get("Profile_Name", owner_username),
-                "is_own_post": user.Username == owner_username if user else False,
+                comment_data['Id'] = str(comment_data['Id'])
+                comment_data['PostId'] = str(comment_data['PostId'])
+                if isinstance(comment_data.get('Date'), datetime.datetime):
+                    comment_data['Date'] = comment_data['Date'].isoformat()
+                comments.append(comment_data)
+
+            final_data = {
+                "Id": post_data['Id'],
+                "Username": post_data['Username'],
+                "User_Pic": user_pic_url,
+                "Image_ref": post_data['Image_ref'],
+                "Caption": post_data['Caption'],
+                "Date": post_data['Date'],
+                "Likes": post_data.get('Likes', 0),
+                "Comments": comments
             }
-        
-            return data
+
+            return final_data
+
         except Exception as e:
             print(f"Error in get_post service: {str(e)}")
             raise Exception(str(e))
+
 
     @staticmethod
     def get_all_posts(user:User,username):

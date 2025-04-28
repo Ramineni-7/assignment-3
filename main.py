@@ -360,29 +360,33 @@ def get_comments(request:Request,post_id):
         return {"status": False, "message": f"Failed to fetch comment: {str(e)}"}
     
 
-app.get('/post/{post_id}',response_class=HTMLResponse)
-def get_post(request:Request,post_id):
+@app.get('/post/{post_id}', response_class=HTMLResponse)
+def get_post(request: Request, post_id):
     try:
-        print('hiiiitittititi')
         user = check_login_and_return_user(request)
         if user is None:
             return templates.TemplateResponse(
                 "main.html",
-                {"request":request,"user":None}
+                {"request": request, "user": None}
             )
-        data = Service.get_post(user,post_id)
+
+        data = Service.get_post(user, post_id)
+
         return templates.TemplateResponse(
             "post-detail.html", {
-                 "request":request,
-                 "Id": data['Id'],
-                 "Username":data["Username"] ,
-                 "User_Pic":data["User_Pic"],
-                 "Image_ref":data["Image_ref"],
-                 "Caption":data["Caption"],
-                 "Date":data["Date"],
-                 "Likes":0,
-                 "user_has_liked": False,
-                 "Comments":data['Comments']
+                "request": request,
+                "post": {
+                    "Id": data['Id'],
+                    "Username": data["Username"],
+                    "User_Pic": data["User_Pic"],
+                    "Image_ref": data["Image_ref"],
+                    "Caption": data["Caption"],
+                    "Date": data["Date"],
+                    "Likes": data["Likes"],
+                    "user_has_liked": False,
+                    "Comments": data['Comments']
+                },
+                "user":user
             })
     except Exception as e:
         print(e)
